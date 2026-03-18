@@ -2,16 +2,6 @@
 
 A modern Project Management Office (PMO) dashboard with Excel import functionality and SQLite database.
 
-## Features
-
-- 📊 **Real-time Metrics**: Track active initiatives, PR projects, on-track status, and budget
-- 📁 **Excel Import**: Import projects from Excel files (.xlsx, .xls)
-- 🗄️ **SQLite Database**: Efficient local data storage
-- ✏️ **CRUD Operations**: Create, read, update, and delete projects
-- 🔍 **Filtering & Sorting**: Filter by priority, stage, and status
-- 🎨 **Modern UI**: Dark theme with responsive design
-- 📅 **Upcoming Events**: Track important project milestones
-
 ## Tech Stack
 
 - **Frontend**: React 18, Lucide Icons
