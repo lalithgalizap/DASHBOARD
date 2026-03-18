@@ -1,0 +1,131 @@
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dropzone {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 40px;
+  text-align: center;
+  background-color: #f9fafb;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.dropzone:hover, .dropzone.dragging {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.dropzone svg {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.dropzone-text {
+  font-size: 14px;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.dropzone-subtext {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.file-input-label {
+  display: inline-block;
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.file-input-label:hover {
+  background-color: #2563eb;
+}
+
+.file-input {
+  display: none;
+}
+
+.format-info {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.format-info h4 {
+  font-size: 14px;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.format-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.format-info li {
+  font-size: 13px;
+  color: #4b5563;
+  padding: 6px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.format-info li:last-child {
+  border-bottom: none;
+}
+
+.format-info strong {
+  color: #3b82f6;
+  font-family: monospace;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.cancel-btn {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.import-btn-modal {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.import-btn-modal:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.import-btn-modal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

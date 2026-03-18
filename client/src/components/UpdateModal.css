@@ -1,0 +1,78 @@
+.update-modal {
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.update-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.update-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.update-form .form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.update-form .form-group input,
+.update-form .form-group select,
+.update-form .form-group textarea {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1f2937;
+  transition: border-color 0.2s ease;
+}
+
+.update-form .form-group input:focus,
+.update-form .form-group select:focus,
+.update-form .form-group textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.update-form .form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.update-form .form-group input::placeholder,
+.update-form .form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.update-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.save-update-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.save-update-btn:hover {
+  background-color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .update-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}

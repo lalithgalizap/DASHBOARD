@@ -1,0 +1,57 @@
+.details-modal {
+  max-width: 500px;
+}
+
+.details-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.details-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.details-form .form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.details-form .form-group input,
+.details-form .form-group select {
+  background-color: white;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #18181b;
+  transition: border-color 0.2s ease;
+}
+
+.details-form .form-group input:focus,
+.details-form .form-group select:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+.details-form .form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.save-changes-btn {
+  background-color: #3b82f6;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.save-changes-btn:hover {
+  background-color: #2563eb;
+}

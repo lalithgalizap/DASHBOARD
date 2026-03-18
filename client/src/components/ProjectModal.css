@@ -1,0 +1,63 @@
+.project-modal {
+  max-width: 700px;
+}
+
+.project-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1f2937;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #3b82f6;
+}
+
+.form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.save-btn {
+  background-color: #10b981;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.save-btn:hover {
+  background-color: #059669;
+}
