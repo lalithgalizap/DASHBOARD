@@ -363,31 +363,51 @@ app.get('/api/projects/:id/documents', (req, res) => {
   res.setHeader('Expires', '0');
   
   try {
-    const projectName = req.query.projectName || 'test';
-    const excelFileName = `${projectName}.xlsx`;
-    const excelFilePath = path.join(__dirname, excelFileName);
+    // Use the standardized PM workbook
+    const excelFilePath = path.join(__dirname, '..', 'All_in_One_PM_Workbook.xlsx');
     console.log(`[${new Date().toISOString()}] Reading Excel file: ${excelFilePath} for project ${req.params.id}...`);
     
     const workbook = XLSX.readFile(excelFilePath);
     
     const documents = {
+      // RAID data
       raidLog: [],
       raidDashboard: {},
-      raidInsights: {},
-      riskManagement: {}
+      riskRegister: [],
+      
+      // Project management data
+      projectCharter: {},
+      projectCover: {},
+      projectPlan: [],
+      milestoneTracker: [],
+      
+      // Stakeholder and resource data
+      stakeholderRegister: [],
+      raciMatrix: [],
+      resourceManagement: {},
+      resourceAvailability: [],
+      
+      // Governance data
+      governanceCadences: [],
+      changeManagement: []
     };
     
-    // Read RAID Log sheet - limit to first 20 actual records
+    // Read RAID Log sheet
     if (workbook.SheetNames.includes('RAID Log')) {
       const worksheet = workbook.Sheets['RAID Log'];
       const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-      // Filter to only valid RAID entries (first 20 based on dashboard)
       documents.raidLog = data.filter(item => 
         item['RAID ID'] && 
-        item['RAID ID'] <= 20 &&
         item.Type && 
         item.Title
       );
+    }
+    
+    // Read Risk Register sheet
+    if (workbook.SheetNames.includes('Risk Register')) {
+      const worksheet = workbook.Sheets['Risk Register'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.riskRegister = data.filter(item => item['ID'] || item['Risk Description']);
     }
     
     // Read RAID Dashboard sheet
@@ -404,40 +424,222 @@ app.get('/api/projects/:id/documents', (req, res) => {
       };
     }
     
-    // Read RAID Insights sheet
-    if (workbook.SheetNames.includes('RAID Insights')) {
-      const worksheet = workbook.Sheets['RAID Insights'];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-      documents.raidInsights = {
-        totalOpenRAIDs: data[4] ? data[4][0] : 0,
-        overdueIssues: data[4] ? data[4][3] : 0,
-        openRisks: data[4] ? data[4][6] : 0,
-        openIssues: data[4] ? data[4][9] : 0,
-        openDependencies: data[4] ? data[4][12] : 0,
-        rawData: data
+    // Read Project Cover Sheet and use as Project Charter source
+    if (workbook.SheetNames.includes('Project Cover Sheet')) {
+      const worksheet = workbook.Sheets['Project Cover Sheet'];
+      const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      
+      // Debug: Log raw data structure
+      console.log('[Charter Debug] Project Cover Sheet raw data (first 15 rows):');
+      for (let i = 0; i < Math.min(15, rawData.length); i++) {
+        console.log(`  Row ${i}:`, rawData[i]);
+      }
+      
+      // Helper to safely get cell value
+      const getCell = (row, col) => {
+        if (row < rawData.length && col < rawData[row].length) {
+          return rawData[row][col];
+        }
+        return '';
       };
+
+      // Helper to format Excel date
+      const formatDate = (val) => {
+        if (!val) return '';
+        if (typeof val === 'number' && val > 40000) {
+          const date = new Date((val - 25569) * 86400 * 1000);
+          return date.toISOString().split('T')[0];
+        }
+        // If it's already a formatted date string, return as-is
+        return val;
+      };
+
+      // Parse the structured grid layout from Project Cover Sheet
+      // Based on typical layout: Labels in col 1, Values in col 2 and col 6
+      const charter = {
+        // Title from row 2 (workbook title)
+        title: getCell(2, 0),
+        
+        // Basic Info from rows 5-9 (Project Cover Sheet layout)
+        // Structure: Label(col 0), Value(col 2), Label(col 6), Value(col 8)
+        basicInfo: {
+          projectName: getCell(5, 2),
+          projectManager: getCell(7, 2),
+          projectSponsor: getCell(8, 2),
+          client: getCell(6, 2),
+          
+          // Dates and values from column 8 (not 6!)
+          projectStartDate: formatDate(getCell(5, 8)),
+          forecastEndDate: formatDate(getCell(6, 8)),
+          estimatedDuration: getCell(7, 8),
+          
+          estimatedBudget: getCell(8, 8),
+          estimatedBenefits: getCell(9, 8),
+          projectComplexity: getCell(9, 2)
+        },
+        
+        // Placeholder for scope - will be populated from DB
+        scope: {
+          included: {
+            label: 'Included',
+            items: []
+          },
+          excluded: {
+            label: 'Excluded',
+            items: []
+          }
+        },
+        
+        rawData: rawData
+      };
+
+      console.log('[Charter Debug] Parsed values:', charter.basicInfo);
+      documents.projectCharter = charter;
+      console.log(`[Charter] Parsed from Cover Sheet: ${charter.basicInfo.projectName}, Manager: ${charter.basicInfo.projectManager}`);
     }
     
-    // Read Risk Management Dashboard sheet
-    if (workbook.SheetNames.includes('Risk Management Dashboard')) {
-      const worksheet = workbook.Sheets['Risk Management Dashboard'];
-      const data = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-      documents.riskManagement = {
-        projectName: data[0] ? data[0][2] : '',
-        rawData: data
-      };
+    // Read Project Plan
+    if (workbook.SheetNames.includes('Project Plan')) {
+      const worksheet = workbook.Sheets['Project Plan'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.projectPlan = data.filter(item => item['Task ID'] || item['Task Name']);
     }
     
-    console.log(`[${new Date().toISOString()}] Returning ${documents.raidLog.length} RAID items`);
+    // Read Milestone Tracker
+    if (workbook.SheetNames.includes('Milestone Tracker')) {
+      const worksheet = workbook.Sheets['Milestone Tracker'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.milestoneTracker = data.filter(item => item['Milestone Ref'] || item['Milestone / Task Name']);
+    }
+    
+    // Read Stakeholder Register
+    if (workbook.SheetNames.includes('Stakeholder Register')) {
+      const worksheet = workbook.Sheets['Stakeholder Register'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.stakeholderRegister = data.filter(item => item['Stakeholder ID'] || item['Name']);
+    }
+    
+    // Read RACI Matrix
+    if (workbook.SheetNames.includes('RACI Matrix')) {
+      const worksheet = workbook.Sheets['RACI Matrix'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.raciMatrix = data.filter(item => item['Deliverable / Task'] || item['RACI MATRIX']);
+    }
+    
+    // Read Resource Management Plan
+    if (workbook.SheetNames.includes('Resource Management Plan')) {
+      const worksheet = workbook.Sheets['Resource Management Plan'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      if (data.length > 0) {
+        documents.resourceManagement = data[0];
+      }
+    }
+    
+    // Read Resource Availability
+    if (workbook.SheetNames.includes('Resource Availability')) {
+      const worksheet = workbook.Sheets['Resource Availability'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.resourceAvailability = data.filter(item => item['Availability ID']);
+    }
+    
+    // Read Governance & Cadences
+    if (workbook.SheetNames.includes('Governance & Cadences')) {
+      const worksheet = workbook.Sheets['Governance & Cadences'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.governanceCadences = data.filter(item => item['Meeting Name'] || item['Meeting Type']);
+    }
+    
+    // Read Change Management Plan
+    if (workbook.SheetNames.includes('Change Management Plan')) {
+      const worksheet = workbook.Sheets['Change Management Plan'];
+      const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+      documents.changeManagement = data.filter(item => item['Change ID']);
+    }
+    
+    console.log(`[${new Date().toISOString()}] Returning data from All_in_One_PM_Workbook.xlsx`);
+    console.log(`  - RAID Log: ${documents.raidLog.length} items`);
+    console.log(`  - Risk Register: ${documents.riskRegister.length} items`);
+    console.log(`  - Project Plan: ${documents.projectPlan.length} tasks`);
+    console.log(`  - Milestones: ${documents.milestoneTracker.length} milestones`);
+    console.log(`  - Stakeholders: ${documents.stakeholderRegister.length} stakeholders`);
     res.json(documents);
   } catch (error) {
-    const projectName = req.query.projectName || 'test';
-    const excelFileName = `${projectName}.xlsx`;
-    console.error(`Error reading Excel file ${excelFileName}:`, error.message);
+    console.error(`Error reading Excel file All_in_One_PM_Workbook.xlsx:`, error.message);
     res.status(500).json({ 
-      error: `Failed to read project documents from ${excelFileName}. Make sure the file exists in the server directory.` 
+      error: `Failed to read project documents from All_in_One_PM_Workbook.xlsx. Make sure the file exists in the project root directory.` 
     });
   }
+});
+
+// ========== PROJECT SCOPE ENDPOINTS ==========
+
+// Get project scope
+app.get('/api/projects/:id/scope', authenticate, (req, res) => {
+  const projectId = req.params.id;
+  
+  db.get(
+    `SELECT scope_included, scope_excluded FROM project_scope WHERE project_id = ?`,
+    [projectId],
+    (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      if (!row) {
+        return res.json({ 
+          scope_included: '', 
+          scope_excluded: '' 
+        });
+      }
+      
+      res.json({
+        scope_included: row.scope_included || '',
+        scope_excluded: row.scope_excluded || ''
+      });
+    }
+  );
+});
+
+// Update project scope
+app.put('/api/projects/:id/scope', authenticate, (req, res) => {
+  const projectId = req.params.id;
+  const { scope_included, scope_excluded } = req.body;
+  
+  db.get(
+    `SELECT id FROM project_scope WHERE project_id = ?`,
+    [projectId],
+    (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      if (row) {
+        // Update existing
+        db.run(
+          `UPDATE project_scope SET scope_included = ?, scope_excluded = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?`,
+          [scope_included, scope_excluded, projectId],
+          function(err) {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+            res.json({ message: 'Scope updated successfully' });
+          }
+        );
+      } else {
+        // Insert new
+        db.run(
+          `INSERT INTO project_scope (project_id, scope_included, scope_excluded) VALUES (?, ?, ?)`,
+          [projectId, scope_included, scope_excluded],
+          function(err) {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+            res.json({ message: 'Scope created successfully', id: this.lastID });
+          }
+        );
+      }
+    }
+  );
 });
 
 // ========== AUTHENTICATION ENDPOINTS ==========

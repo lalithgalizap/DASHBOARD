@@ -811,3 +811,853 @@
   font-size: 13px;
   color: #1f2937;
 }
+
+/* Project Charter Styles */
+.charter-content .cover-sheet {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.project-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.project-subtitle {
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.charter-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.charter-field {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.charter-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.charter-field .field-value {
+  font-size: 14px;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+/* Project Plan Styles */
+.plan-table-container {
+  overflow-x: auto;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.plan-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.plan-table th {
+  background-color: #1f2937;
+  color: #d1d5db;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.plan-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+.plan-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.rag-indicator {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rag-indicator.green {
+  background-color: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.rag-indicator.amber,
+.rag-indicator.yellow {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.rag-indicator.red {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Milestone Styles */
+.milestones-list {
+  display: grid;
+  gap: 16px;
+}
+
+.milestone-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #6b7280;
+}
+
+.milestone-card.completed {
+  border-left-color: #22c55e;
+}
+
+.milestone-card.in-progress {
+  border-left-color: #3b82f6;
+}
+
+.milestone-card.behind {
+  border-left-color: #ef4444;
+}
+
+.milestone-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.milestone-ref {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.milestone-wbs {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.milestone-status {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.milestone-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.milestone-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.milestone-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.milestone-detail label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.milestone-detail span {
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.milestone-detail.variance .behind {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.milestone-detail.variance .ahead {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.milestone-notes {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.milestone-notes label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.milestone-notes p {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Stakeholder Styles */
+.stakeholders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stakeholder-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.stakeholder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.stakeholder-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.stakeholder-id {
+  font-size: 11px;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.stakeholder-role {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 8px;
+}
+
+.stakeholder-contact label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* RACI Matrix Styles */
+.raci-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.raci-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.raci-table-container {
+  overflow-x: auto;
+}
+
+.raci-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.raci-table th {
+  background-color: #f3f4f6;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6b7280;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.raci-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+}
+
+/* Governance & Cadence Styles */
+.cadence-list {
+  display: grid;
+  gap: 16px;
+}
+
+.meeting-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.meeting-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.meeting-type {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  background: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.meeting-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.meeting-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meeting-detail label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.meeting-detail span {
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.meeting-agenda {
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.meeting-agenda label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.meeting-agenda p {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Resource Management Styles */
+.resource-management {
+  margin-bottom: 24px;
+}
+
+.resource-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.resource-field {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.resource-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.availability-section,
+.change-management-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.availability-section h4,
+.change-management-section h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.availability-list,
+.changes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.availability-card,
+.change-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.availability-id,
+.change-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.availability-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.availability-details span {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e5e7eb;
+}
+
+.unavailable-type {
+  color: #ef4444 !important;
+}
+
+.change-status {
+  font-size: 12px;
+  color: #4b5563;
+}
+
+/* Closure Styles */
+.closure-checklist {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.closure-checklist h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.closure-checklist ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.closure-checklist li {
+  font-size: 14px;
+  color: #4b5563;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.closure-checklist li:last-child {
+  border-bottom: none;
+}
+
+/* === NEW PROJECT CHARTER STYLES === */
+
+.charter-header-banner {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  color: white;
+  padding: 24px 30px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.charter-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+/* Basic Info Grid - 3 columns matching Excel */
+.charter-basic-info {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-cell {
+  padding: 16px 20px;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-cell:last-child {
+  border-right: none;
+}
+
+.info-cell label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.info-value.budget {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.info-value.complexity {
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.info-value.complexity.high {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.info-value.complexity.medium {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.info-value.complexity.low {
+  background-color: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+}
+
+/* Two Column Sections */
+.charter-sections-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.charter-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.charter-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-content-box {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 16px;
+  min-height: 120px;
+}
+
+.section-content-box p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #374151;
+  white-space: pre-line;
+}
+
+.deliverables-list {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.deliverables-list li {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.no-data {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* More Details Button */
+.more-details-btn {
+  width: 100%;
+  padding: 12px 20px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.more-details-btn:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+/* Expanded Details Section */
+.charter-expanded-details {
+  animation: expandIn 0.3s ease-out;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scope Section */
+.scope-section {
+  margin-bottom: 20px;
+}
+
+.scope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.scope-column {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.scope-column h5 {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin: 0 0 12px 0;
+}
+
+.scope-column ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.scope-column li {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.scope-column.included {
+  border-left: 3px solid #22c55e;
+}
+
+.scope-column.excluded {
+  border-left: 3px solid #ef4444;
+}
+
+/* Charter Tables */
+.charter-milestones-table,
+.charter-risks-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.charter-milestones-table th,
+.charter-risks-table th {
+  background: #f3f4f6;
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.charter-milestones-table td,
+.charter-risks-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.charter-milestones-table tbody tr:hover,
+.charter-risks-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* Risk badges */
+.risk-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.risk-badge.high {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.risk-badge.medium {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.risk-badge.low {
+  background-color: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+/* Risk row highlighting */
+.charter-risks-table tbody tr.risk-high {
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.charter-risks-table tbody tr.risk-medium {
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.charter-risks-table tbody tr.risk-low {
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .charter-sections-two-col,
+  .scope-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .info-cell {
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .info-cell:last-child {
+    border-bottom: none;
+  }
+}

@@ -337,42 +337,6 @@ function ProjectDetail() {
             </div>
           </section>
 
-          {/* Milestones Section */}
-          <section className="content-section">
-            <div className="section-header">
-              <h2>MILESTONES</h2>
-              <button className="edit-section-btn">Edit</button>
-            </div>
-            <div className="section-content">
-              <div className="milestones-list">
-                <div className="milestone-item completed">
-                  <div className="milestone-icon">✓</div>
-                  <div className="milestone-content">
-                    <div className="milestone-title">Project Incubated</div>
-                  </div>
-                </div>
-                <div className="milestone-item in-progress">
-                  <div className="milestone-icon">○</div>
-                  <div className="milestone-content">
-                    <div className="milestone-title">Advanced to Build</div>
-                  </div>
-                </div>
-                <div className="milestone-item pending">
-                  <div className="milestone-icon">○</div>
-                  <div className="milestone-content">
-                    <div className="milestone-title">Scaled to Market</div>
-                  </div>
-                </div>
-                <div className="milestone-item pending">
-                  <div className="milestone-icon">○</div>
-                  <div className="milestone-content">
-                    <div className="milestone-title">Incubate POC</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Documents Section */}
           <section className="content-section documents-section">
             <ProjectDocuments projectId={id} projectName={project?.name} />
