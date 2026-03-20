@@ -1,6 +1,4 @@
-# PMO Dashboard
 
-A modern Project Management Office (PMO) dashboard with Excel import functionality and SQLite database.
 
 ## Tech Stack
 
