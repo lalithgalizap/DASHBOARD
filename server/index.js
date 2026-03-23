@@ -384,8 +384,7 @@ app.get('/api/projects/:id/documents', (req, res) => {
       // Stakeholder and resource data
       stakeholderRegister: [],
       raciMatrix: [],
-      resourceManagement: {},
-      resourceAvailability: [],
+      resourceManagementPlan: [],
       
       // Governance data
       governanceCadences: [],
@@ -528,11 +527,15 @@ app.get('/api/projects/:id/documents', (req, res) => {
     
     // Read Resource Management Plan
     if (workbook.SheetNames.includes('Resource Management Plan')) {
+      console.log('[DEBUG] Resource Management Plan sheet found');
       const worksheet = workbook.Sheets['Resource Management Plan'];
       const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-      if (data.length > 0) {
-        documents.resourceManagement = data[0];
-      }
+      console.log('[DEBUG] Raw data rows:', data.length);
+      console.log('[DEBUG] First row keys:', data.length > 0 ? Object.keys(data[0]) : 'No data');
+      documents.resourceManagementPlan = data.filter(item => Object.values(item).some(v => v && v !== ''));
+      console.log('[DEBUG] Filtered count:', documents.resourceManagementPlan.length);
+    } else {
+      console.log('[DEBUG] Resource Management Plan sheet NOT found. Available sheets:', workbook.SheetNames);
     }
     
     // Read Resource Availability

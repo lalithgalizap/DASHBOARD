@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, AlertTriangle, CheckCircle, Users, Calendar, TrendingUp, Shield, DollarSign, XCircle } from 'lucide-react';
+import { FileText, AlertTriangle, CheckCircle, Users, Calendar, TrendingUp, Shield, UserCircle, XCircle, Search, GitPullRequest } from 'lucide-react';
 import './ProjectDocuments.css';
 
 function ProjectDocuments({ projectId, projectName }) {
@@ -20,6 +20,10 @@ function ProjectDocuments({ projectId, projectName }) {
   const [selectedStakeholder, setSelectedStakeholder] = useState(null);
   const [showStakeholderModal, setShowStakeholderModal] = useState(false);
   const [stakeholderSearch, setStakeholderSearch] = useState('');
+  const [selectedChange, setSelectedChange] = useState(null);
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
   
   // RAID filters state
   const [raidFilters, setRaidFilters] = useState({
@@ -45,11 +49,41 @@ function ProjectDocuments({ projectId, projectName }) {
     'RAG Status': ''
   });
 
-  // Resource Availability filters state
-  const [resourceFilters, setResourceFilters] = useState({
+  // Resource Management filters state
+  const [resourceManagementFilters, setResourceManagementFilters] = useState({
     'Resource Name': '',
-    'Unavailability Type': '',
+    'Role': '',
     'Status': ''
+  });
+
+  // Resource Management search state
+  const [resourceSearch, setResourceSearch] = useState('');
+
+  // Risk Register filters state
+  const [riskFilters, setRiskFilters] = useState({
+    'Impact Area': '',
+    'Impact Rating': '',
+    'Probability': '',
+    'Risk Priority': '',
+    'Status': '',
+    'Risk Owner': '',
+    'Mitigation Strategy': ''
+  });
+
+  // Change Management filters state
+  const [changeManagementFilters, setChangeManagementFilters] = useState({
+    'Change ID': '',
+    'Status': '',
+    'Priority': '',
+    'Impact': '',
+    'Requester': ''
+  });
+
+  // Milestone Tracker filters state
+  const [milestoneFilters, setMilestoneFilters] = useState({
+    'Status': '',
+    'Owner': '',
+    'WBS': ''
   });
 
   useEffect(() => {
@@ -105,10 +139,12 @@ function ProjectDocuments({ projectId, projectName }) {
   const tabs = [
     { id: 'charter', label: 'Project Charter', icon: FileText },
     { id: 'plan', label: 'Project Plan', icon: Calendar },
+    { id: 'milestones', label: 'Milestone Tracker', icon: TrendingUp },
     { id: 'raid', label: 'RAID Log', icon: AlertTriangle },
     { id: 'stakeholders', label: 'Stakeholder Register', icon: Users },
     { id: 'cadence', label: 'Risk Register', icon: Shield },
-    { id: 'resources', label: 'Resource Management', icon: DollarSign },
+    { id: 'resource', label: 'Resource Management', icon: UserCircle },
+    { id: 'change', label: 'Change Management', icon: GitPullRequest },
     { id: 'closure', label: 'Project Closure', icon: XCircle }
   ];
 
@@ -1169,57 +1205,243 @@ function ProjectDocuments({ projectId, projectName }) {
     if (!documents?.milestoneTracker || documents.milestoneTracker.length === 0) {
       return (
         <div className="document-content">
-          <h3>Milestone Plan</h3>
+          <h3>Milestone Tracker</h3>
           <p className="placeholder-text">No milestone data available.</p>
         </div>
       );
     }
 
+    // Get all unique columns from the data
+    const allColumns = documents.milestoneTracker.reduce((cols, milestone) => {
+      Object.keys(milestone).forEach(key => {
+        if (!cols.includes(key) && !key.startsWith('__EMPTY')) {
+          cols.push(key);
+        }
+      });
+      return cols;
+    }, []);
+
+    // Priority columns to show first
+    const priorityCols = ['Milestone Ref', 'WBS', 'Milestone / Task Name', 'Owner', 'Status', 'Planned End Date', '% Complete', 'Variance (Days)', 'Notes'];
+    const displayColumns = priorityCols.filter(col => allColumns.includes(col));
+    
+    // If no priority columns found, use first 8 columns
+    const finalDisplayColumns = displayColumns.length > 0 ? displayColumns : allColumns.slice(0, 8);
+
+    // Get unique values for filter dropdowns
+    const getUniqueValues = (field) => {
+      const values = [...new Set(documents.milestoneTracker.map(milestone => milestone[field]).filter(val => {
+        return val && val !== field && String(val).trim() !== '';
+      }))];
+      return values.sort();
+    };
+
+    const filterOptions = {
+      'Status': getUniqueValues('Status'),
+      'Owner': getUniqueValues('Owner'),
+      'WBS': getUniqueValues('WBS')
+    };
+
+    // Filter milestones based on selected filters
+    const filteredMilestones = documents.milestoneTracker.filter(milestone => {
+      return Object.entries(milestoneFilters).every(([field, value]) => {
+        if (!value) return true;
+        return milestone[field] === value;
+      });
+    });
+
+    // Reset all filters
+    const resetFilters = () => {
+      setMilestoneFilters({
+        'Status': '',
+        'Owner': '',
+        'WBS': ''
+      });
+    };
+
+    // Format cell value for display
+    const formatValue = (value, column) => {
+      if (value === '' || value === null || value === undefined) return '-';
+      if (column === '% Complete') return `${(value * 100).toFixed(0)}%`;
+      if (typeof value === 'number' && value > 40000 && value < 50000) {
+        const date = new Date((value - 25569) * 86400 * 1000);
+        return date.toLocaleDateString();
+      }
+      return value;
+    };
+
+    // Get CSS class for cell based on column
+    const getCellClass = (column, value) => {
+      if (column === 'Status') return `status-badge ${value?.toLowerCase().replace(/\s+/g, '-')}`;
+      return '';
+    };
+
+    // Open milestone detail modal
+    const openMilestoneModal = (milestone) => {
+      setSelectedMilestone(milestone);
+      setShowMilestoneModal(true);
+    };
+
+    // Render milestone detail modal
+    const renderMilestoneModal = () => {
+      if (!showMilestoneModal || !selectedMilestone) return null;
+
+      return (
+        <div className="category-modal-overlay" onClick={() => setShowMilestoneModal(false)}>
+          <div className="category-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '900px', maxHeight: '80vh', overflow: 'auto'}}>
+            <div className="category-modal-header">
+              <h3>
+                <span className="category-color-indicator" style={{ backgroundColor: '#3b82f6' }} />
+                Milestone Details: {selectedMilestone['Milestone / Task Name'] || selectedMilestone['Milestone Ref']}
+              </h3>
+              <button className="modal-close-btn" onClick={() => setShowMilestoneModal(false)}>✕</button>
+            </div>
+            <div className="category-modal-content">
+              <div className="milestone-detail-tile" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', padding: '16px'}}>
+                {allColumns.map((col, idx) => {
+                  const value = selectedMilestone[col];
+                  const cellClass = getCellClass(col, value);
+                  return (
+                    <div key={idx} className="detail-item" style={{
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      padding: '12px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <label style={{fontSize: '11px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px'}}>{col}</label>
+                      <span style={{fontSize: '14px', fontWeight: '500'}}>
+                        {cellClass ? (
+                          <span className={cellClass}>{formatValue(value, col)}</span>
+                        ) : (
+                          formatValue(value, col)
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
     return (
       <div className="document-content">
-        <h3>Milestone Tracker ({documents.milestoneTracker.length} milestones)</h3>
-        <div className="milestones-list">
-          {documents.milestoneTracker.map((milestone, index) => (
-            <div key={index} className={`milestone-card ${milestone['Status']?.toLowerCase().replace(/\s+/g, '-')}`}>
-              <div className="milestone-header">
-                <span className="milestone-ref">{milestone['Milestone Ref']}</span>
-                <span className="milestone-wbs">WBS: {milestone['WBS']}</span>
-                <span className={`milestone-status ${milestone['Status']?.toLowerCase().replace(/\s+/g, '-')}`}>
-                  {milestone['Status']}
-                </span>
-              </div>
-              <div className="milestone-name">{milestone['Milestone / Task Name']}</div>
-              <div className="milestone-details">
-                <div className="milestone-detail">
-                  <label>Owner:</label>
-                  <span>{milestone['Owner']}</span>
-                </div>
-                <div className="milestone-detail">
-                  <label>Planned End:</label>
-                  <span>{milestone['Planned End Date']}</span>
-                </div>
-                <div className="milestone-detail">
-                  <label>Completion:</label>
-                  <span>{(milestone['% Complete'] * 100).toFixed(0)}%</span>
-                </div>
-                {milestone['Variance (Days)'] !== 0 && (
-                  <div className="milestone-detail variance">
-                    <label>Variance:</label>
-                    <span className={milestone['Variance (Days)'] > 0 ? 'behind' : 'ahead'}>
-                      {milestone['Variance (Days)']} days
-                    </span>
-                  </div>
-                )}
-              </div>
-              {milestone['Notes'] && (
-                <div className="milestone-notes">
-                  <label>Notes:</label>
-                  <p>{milestone['Notes']}</p>
-                </div>
-              )}
+        
+        {/* Milestone Statistics Cards */}
+        <div className="plan-stats" style={{display: 'flex', gap: '16px', marginBottom: '20px'}}>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Total Milestones</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#1f2937'}}>{documents.milestoneTracker.length}</div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Completed</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#16a34a'}}>
+              {documents.milestoneTracker.filter(m => m['Status'] === 'Completed' || m['Status'] === 'Complete' || m['% Complete'] === 1).length}
             </div>
-          ))}
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>In Progress</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#2563eb'}}>
+              {documents.milestoneTracker.filter(m => m['Status'] === 'In Progress' || m['Status'] === 'In-Progress' || (m['% Complete'] > 0 && m['% Complete'] < 1)).length}
+            </div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Delayed</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#dc2626'}}>
+              {documents.milestoneTracker.filter(m => m['Variance (Days)'] > 0 || m['Status'] === 'Delayed' || m['Status'] === 'Behind').length}
+            </div>
+          </div>
         </div>
+
+        {/* Filters Section */}
+        <div className="plan-filters" style={{display: 'flex', gap: '12px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center'}}>
+          <span style={{fontSize: '13px', fontWeight: '600', color: '#374151'}}>Filters:</span>
+          
+          {Object.entries(filterOptions).map(([field, values]) => (
+            values.length > 0 && (
+              <div key={field} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                <span style={{fontSize: '12px', fontWeight: '500', color: '#6b7280'}}>{field}:</span>
+                <select
+                  value={milestoneFilters[field]}
+                  onChange={(e) => setMilestoneFilters(prev => ({ ...prev, [field]: e.target.value }))}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: milestoneFilters[field] ? '#dbeafe' : 'white',
+                    cursor: 'pointer',
+                    minWidth: '120px'
+                  }}
+                >
+                  <option value="">-- Select --</option>
+                  {values.map(val => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          ))}
+          
+          {Object.values(milestoneFilters).some(v => v !== '') && (
+            <button
+              onClick={resetFilters}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        <h3>Milestone Tracker ({filteredMilestones.length} of {documents.milestoneTracker.length} milestones)</h3>
+        <div className="plan-table-container" style={{overflowX: 'auto', maxHeight: '600px'}}>
+          <table className="plan-table" style={{minWidth: '100%', fontSize: '12px'}}>
+            <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
+              <tr>
+                <th style={{whiteSpace: 'nowrap', padding: '8px', width: '30px'}}>+</th>
+                {finalDisplayColumns.map((col, idx) => (
+                  <th key={idx} style={{whiteSpace: 'nowrap', padding: '8px'}}>{col}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredMilestones.map((milestone, index) => (
+                <tr key={index} onClick={() => openMilestoneModal(milestone)} style={{cursor: 'pointer'}}>
+                  <td style={{padding: '6px 8px', textAlign: 'center'}}>
+                    ▶
+                  </td>
+                  {finalDisplayColumns.map((col, colIdx) => {
+                    const value = milestone[col];
+                    const cellClass = getCellClass(col, value);
+                    return (
+                      <td key={colIdx} style={{padding: '6px 8px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                        {cellClass ? (
+                          <span className={cellClass}>{formatValue(value, col)}</span>
+                        ) : (
+                          formatValue(value, col)
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Milestone Detail Modal */}
+        {renderMilestoneModal()}
       </div>
     );
   };
@@ -1395,6 +1617,45 @@ function ProjectDocuments({ projectId, projectName }) {
     // Remaining columns (shown in modal)
     const remainingColumns = allColumns.filter(col => !displayColumns.includes(col));
 
+    // Get unique values for filter dropdowns
+    const getUniqueValues = (field) => {
+      const values = [...new Set(documents.riskRegister.map(risk => risk[field]).filter(val => {
+        return val && val !== field && String(val).trim() !== '';
+      }))];
+      return values.sort();
+    };
+
+    const filterOptions = {
+      'Impact Area': getUniqueValues('Impact Area'),
+      'Impact Rating': getUniqueValues('Impact Rating'),
+      'Probability': getUniqueValues('Probability'),
+      'Risk Priority': getUniqueValues('Risk Priority'),
+      'Status': getUniqueValues('Status'),
+      'Risk Owner': getUniqueValues('Risk Owner'),
+      'Mitigation Strategy': getUniqueValues('Mitigation Strategy')
+    };
+
+    // Filter risks based on selected filters
+    const filteredRisks = documents.riskRegister.filter(risk => {
+      return Object.entries(riskFilters).every(([field, value]) => {
+        if (!value) return true;
+        return risk[field] === value;
+      });
+    });
+
+    // Reset all filters
+    const resetFilters = () => {
+      setRiskFilters({
+        'Impact Area': '',
+        'Impact Rating': '',
+        'Probability': '',
+        'Risk Priority': '',
+        'Status': '',
+        'Risk Owner': '',
+        'Mitigation Strategy': ''
+      });
+    };
+
     // Format cell value for display
     const formatValue = (value, column) => {
       if (value === '' || value === null || value === undefined) return '-';
@@ -1462,7 +1723,82 @@ function ProjectDocuments({ projectId, projectName }) {
 
     return (
       <div className="document-content">
-        <h3>Risk Register ({documents.riskRegister.length} risks)</h3>
+        
+        {/* Risk Statistics Cards */}
+        <div className="plan-stats" style={{display: 'flex', gap: '16px', marginBottom: '20px'}}>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Total Risks</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#1f2937'}}>{documents.riskRegister.length}</div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>High Priority</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#dc2626'}}>
+              {documents.riskRegister.filter(r => r['Risk Priority'] === 'High' || r['Risk Priority'] === 'Critical').length}
+            </div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Open</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#f59e0b'}}>
+              {documents.riskRegister.filter(r => r['Status'] === 'Open' || r['Status'] === 'Active').length}
+            </div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Mitigated</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#16a34a'}}>
+              {documents.riskRegister.filter(r => r['Status'] === 'Mitigated' || r['Status'] === 'Closed' || r['Mitigation Strategy']).length}
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="plan-filters" style={{display: 'flex', gap: '12px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center'}}>
+          <span style={{fontSize: '13px', fontWeight: '600', color: '#374151'}}>Filters:</span>
+          
+          {Object.entries(filterOptions).map(([field, values]) => (
+            values.length > 0 && (
+              <div key={field} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                <span style={{fontSize: '12px', fontWeight: '500', color: '#6b7280'}}>{field}:</span>
+                <select
+                  value={riskFilters[field]}
+                  onChange={(e) => setRiskFilters(prev => ({ ...prev, [field]: e.target.value }))}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: riskFilters[field] ? '#dbeafe' : 'white',
+                    cursor: 'pointer',
+                    minWidth: '120px'
+                  }}
+                >
+                  <option value="">-- Select --</option>
+                  {values.map(val => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          ))}
+          
+          {Object.values(riskFilters).some(v => v !== '') && (
+            <button
+              onClick={resetFilters}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        <h3>Risk Register ({filteredRisks.length} of {documents.riskRegister.length} risks)</h3>
         <div className="plan-table-container" style={{overflowX: 'auto', maxHeight: '600px'}}>
           <table className="plan-table" style={{minWidth: '100%', fontSize: '12px'}}>
             <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
@@ -1474,7 +1810,7 @@ function ProjectDocuments({ projectId, projectName }) {
               </tr>
             </thead>
             <tbody>
-              {documents.riskRegister.map((risk, index) => (
+              {filteredRisks.map((risk, index) => (
                 <tr key={index} onClick={() => openRiskModal(risk)} style={{cursor: 'pointer'}}>
                   <td style={{padding: '6px 8px', textAlign: 'center'}}>
                     ▶
@@ -1503,21 +1839,20 @@ function ProjectDocuments({ projectId, projectName }) {
     );
   };
 
-  const renderResources = () => {
-    // Show resource availability data if available
-    const hasAvailability = documents?.resourceAvailability && documents.resourceAvailability.length > 0;
+  const renderResourceManagement = () => {
+    const hasData = documents?.resourceManagementPlan && documents.resourceManagementPlan.length > 0;
     
-    if (!hasAvailability) {
+    if (!hasData) {
       return (
         <div className="document-content">
-          <h3>Resource Availability</h3>
-          <p className="placeholder-text">No resource availability data available.</p>
+          <h3>Resource Management</h3>
+          <p className="placeholder-text">No resource management data available.</p>
         </div>
       );
     }
 
-    // Get all columns from the data
-    const allColumns = documents.resourceAvailability.reduce((cols, record) => {
+    // Get all columns from the data dynamically
+    const allColumns = documents.resourceManagementPlan.reduce((cols, record) => {
       Object.keys(record).forEach(key => {
         if (!cols.includes(key)) {
           cols.push(key);
@@ -1526,7 +1861,7 @@ function ProjectDocuments({ projectId, projectName }) {
       return cols;
     }, []);
 
-    // Priority columns to show first
+    // Priority columns to show first (if they exist)
     const priorityColumns = [
       'Resource Name', 'Zapcom ID', 'Role', 'Workstream / Function', 
       'Allocation %', 'Start Date', 'End Date', 'Status', 
@@ -1539,36 +1874,26 @@ function ProjectDocuments({ projectId, projectName }) {
     // Columns to display in table
     const displayColumns = [...priorityColumns, ...remainingColumns];
 
-    // Get unique values for filter dropdowns
-    const getUniqueValues = (field) => {
-      const values = [...new Set(documents.resourceAvailability.map(record => record[field]).filter(val => {
-        return val && String(val).trim() !== '';
-      }))];
-      return values.sort();
-    };
+    // Calculate meaningful metrics
+    const totalResources = documents.resourceManagementPlan.length;
+    const activeResources = documents.resourceManagementPlan.filter(r => r.Status === 'Active' || r.Status === 'Allocated').length;
+    const availableResources = documents.resourceManagementPlan.filter(r => r.Status === 'Available' || r.Status === 'Unassigned').length;
+    const highCriticality = documents.resourceManagementPlan.filter(r => 
+      r.Criticality === 'High' || r.Criticality === 'Critical'
+    ).length;
 
-    const filterOptions = {
-      'Resource Name': getUniqueValues('Resource Name'),
-      'Unavailability Type': getUniqueValues('Unavailability Type'),
-      'Status': getUniqueValues('Status')
-    };
-
-    // Filter records based on selected filters
-    const filteredRecords = documents.resourceAvailability.filter(record => {
-      return Object.entries(resourceFilters).every(([field, value]) => {
-        if (!value) return true;
-        return record[field] === value;
+    // Filter records based on search (client-side)
+    const filteredRecords = documents.resourceManagementPlan.filter(record => {
+      if (!resourceSearch.trim()) return true;
+      const searchLower = resourceSearch.toLowerCase();
+      return displayColumns.some(col => {
+        const value = record[col];
+        if (value && String(value).toLowerCase().includes(searchLower)) {
+          return true;
+        }
+        return false;
       });
     });
-
-    // Reset filters
-    const resetResourceFilters = () => {
-      setResourceFilters({
-        'Resource Name': '',
-        'Unavailability Type': '',
-        'Status': ''
-      });
-    };
 
     // Format cell value
     const formatValue = (value, column) => {
@@ -1579,56 +1904,33 @@ function ProjectDocuments({ projectId, projectName }) {
 
     return (
       <div className="document-content">
-        <h3>Resource Availability</h3>
-        
-        {/* Statistics */}
-        <div className="plan-stats" style={{display: 'flex', gap: '16px', marginBottom: '20px'}}>
-          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
-            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Total Resources</div>
-            <div style={{fontSize: '28px', fontWeight: '600', color: '#1f2937'}}>{documents.resourceAvailability.length}</div>
-          </div>
-          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
-            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Showing</div>
-            <div style={{fontSize: '28px', fontWeight: '600', color: '#2563eb'}}>{filteredRecords.length}</div>
-          </div>
-        </div>
+        <h3>Resource Management</h3>
 
-        {/* Filters */}
-        <div className="plan-filters" style={{display: 'flex', gap: '12px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center'}}>
-          <span style={{fontSize: '13px', fontWeight: '600', color: '#374151'}}>Filters:</span>
-          
-          {Object.entries(filterOptions).map(([field, values]) => (
-            values.length > 0 && (
-              <div key={field} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
-                <span style={{fontSize: '12px', fontWeight: '500', color: '#6b7280'}}>{field}:</span>
-                <select
-                  value={resourceFilters[field]}
-                  onChange={(e) => setResourceFilters(prev => ({ ...prev, [field]: e.target.value }))}
-                  style={{
-                    padding: '6px 10px',
-                    fontSize: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #d1d5db',
-                    backgroundColor: resourceFilters[field] ? '#dbeafe' : 'white',
-                    cursor: 'pointer',
-                    minWidth: '120px'
-                  }}
-                >
-                  <option value="">-- Select --</option>
-                  {values.map(val => (
-                    <option key={val} value={val}>{val}</option>
-                  ))}
-                </select>
-              </div>
-            )
-          ))}
-          
-          {Object.values(resourceFilters).some(v => v !== '') && (
-            <button
-              onClick={resetResourceFilters}
+        {/* Search Bar */}
+        <div style={{marginBottom: '20px', display: 'flex', gap: '12px', alignItems: 'center'}}>
+          <div style={{position: 'relative', flex: 1, maxWidth: '400px'}}>
+            <Search size={18} style={{position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af'}} />
+            <input
+              type="text"
+              placeholder="Search resources by name, role, status, or any field..."
+              value={resourceSearch}
+              onChange={(e) => setResourceSearch(e.target.value)}
               style={{
-                padding: '6px 12px',
-                fontSize: '12px',
+                width: '100%',
+                padding: '10px 12px 10px 40px',
+                fontSize: '14px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                backgroundColor: 'white'
+              }}
+            />
+          </div>
+          {resourceSearch && (
+            <button
+              onClick={() => setResourceSearch('')}
+              style={{
+                padding: '10px 16px',
+                fontSize: '13px',
                 backgroundColor: '#ef4444',
                 color: 'white',
                 border: 'none',
@@ -1636,9 +1938,12 @@ function ProjectDocuments({ projectId, projectName }) {
                 cursor: 'pointer'
               }}
             >
-              Clear All
+              Clear Search
             </button>
           )}
+          <span style={{fontSize: '13px', color: '#6b7280', marginLeft: 'auto'}}>
+            Showing {filteredRecords.length} of {totalResources} resources
+          </span>
         </div>
 
         {/* Table */}
@@ -1667,6 +1972,251 @@ function ProjectDocuments({ projectId, projectName }) {
             </tbody>
           </table>
         </div>
+      </div>
+    );
+  };
+
+  const renderChangeManagement = () => {
+    if (!documents?.changeManagement || documents.changeManagement.length === 0) {
+      return (
+        <div className="document-content">
+          <h3>Change Management Plan</h3>
+          <p className="placeholder-text">No change management data available.</p>
+        </div>
+      );
+    }
+
+    // Get all unique columns from the data
+    const allColumns = documents.changeManagement.reduce((cols, change) => {
+      Object.keys(change).forEach(key => {
+        if (!cols.includes(key) && !key.startsWith('__EMPTY')) {
+          cols.push(key);
+        }
+      });
+      return cols;
+    }, []);
+
+    // Priority columns to show first
+    const priorityCols = ['Change ID', 'Change Description', 'Requester', 'Impact', 'Priority', 'Status', 'Approval Date', 'Approved By', 'Notes'];
+    const displayColumns = priorityCols.filter(col => allColumns.includes(col));
+    
+    // If no priority columns found, use first 8 columns
+    const finalDisplayColumns = displayColumns.length > 0 ? displayColumns : allColumns.slice(0, 8);
+
+    // Get unique values for filter dropdowns
+    const getUniqueValues = (field) => {
+      const values = [...new Set(documents.changeManagement.map(change => change[field]).filter(val => {
+        return val && val !== field && String(val).trim() !== '';
+      }))];
+      return values.sort();
+    };
+
+    const filterOptions = {
+      'Status': getUniqueValues('Status'),
+      'Priority': getUniqueValues('Priority'),
+      'Impact': getUniqueValues('Impact'),
+      'Requester': getUniqueValues('Requester')
+    };
+
+    // Filter changes based on selected filters
+    const filteredChanges = documents.changeManagement.filter(change => {
+      return Object.entries(changeManagementFilters).every(([field, value]) => {
+        if (!value) return true;
+        return change[field] === value;
+      });
+    });
+
+    // Reset all filters
+    const resetFilters = () => {
+      setChangeManagementFilters({
+        'Change ID': '',
+        'Status': '',
+        'Priority': '',
+        'Impact': '',
+        'Requester': ''
+      });
+    };
+
+    // Format cell value for display
+    const formatValue = (value, column) => {
+      if (value === '' || value === null || value === undefined) return '-';
+      return value;
+    };
+
+    // Get CSS class for cell based on column
+    const getCellClass = (column, value) => {
+      if (column === 'Status') return `status-badge ${value?.toLowerCase().replace(/\s+/g, '-')}`;
+      if (column === 'Priority') return `priority-badge ${value?.toLowerCase()}`;
+      if (column === 'Impact') return `impact-badge ${value?.toLowerCase()}`;
+      return '';
+    };
+
+    // Open change detail modal
+    const openChangeModal = (change) => {
+      setSelectedChange(change);
+      setShowChangeModal(true);
+    };
+
+    // Render change detail modal
+    const renderChangeModal = () => {
+      if (!showChangeModal || !selectedChange) return null;
+
+      return (
+        <div className="category-modal-overlay" onClick={() => setShowChangeModal(false)}>
+          <div className="category-modal" onClick={(e) => e.stopPropagation()} style={{maxWidth: '900px', maxHeight: '80vh', overflow: 'auto'}}>
+            <div className="category-modal-header">
+              <h3>
+                <span className="category-color-indicator" style={{ backgroundColor: '#8b5cf6' }} />
+                Change Details: {selectedChange['Change ID'] || 'N/A'}
+              </h3>
+              <button className="modal-close-btn" onClick={() => setShowChangeModal(false)}>✕</button>
+            </div>
+            <div className="category-modal-content">
+              <div className="change-detail-tile" style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', padding: '16px'}}>
+                {allColumns.map((col, idx) => {
+                  const value = selectedChange[col];
+                  const cellClass = getCellClass(col, value);
+                  return (
+                    <div key={idx} className="detail-item" style={{
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      padding: '12px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      border: '1px solid #e9ecef'
+                    }}>
+                      <label style={{fontSize: '11px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px'}}>{col}</label>
+                      <span style={{fontSize: '14px', fontWeight: '500'}}>
+                        {cellClass ? (
+                          <span className={cellClass}>{formatValue(value, col)}</span>
+                        ) : (
+                          formatValue(value, col)
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="document-content">
+        
+        {/* Change Statistics Cards */}
+        <div className="plan-stats" style={{display: 'flex', gap: '16px', marginBottom: '20px'}}>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Total Changes</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#1f2937'}}>{documents.changeManagement.length}</div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Pending</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#f59e0b'}}>
+              {documents.changeManagement.filter(c => c['Status'] === 'Pending' || c['Status'] === 'Submitted' || c['Status'] === 'Under Review').length}
+            </div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Approved</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#16a34a'}}>
+              {documents.changeManagement.filter(c => c['Status'] === 'Approved' || c['Status'] === 'Implemented').length}
+            </div>
+          </div>
+          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
+            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Rejected</div>
+            <div style={{fontSize: '28px', fontWeight: '600', color: '#dc2626'}}>
+              {documents.changeManagement.filter(c => c['Status'] === 'Rejected' || c['Status'] === 'Declined').length}
+            </div>
+          </div>
+        </div>
+
+        {/* Filters Section */}
+        <div className="plan-filters" style={{display: 'flex', gap: '12px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center'}}>
+          <span style={{fontSize: '13px', fontWeight: '600', color: '#374151'}}>Filters:</span>
+          
+          {Object.entries(filterOptions).map(([field, values]) => (
+            values.length > 0 && (
+              <div key={field} style={{display: 'flex', alignItems: 'center', gap: '6px'}}>
+                <span style={{fontSize: '12px', fontWeight: '500', color: '#6b7280'}}>{field}:</span>
+                <select
+                  value={changeManagementFilters[field]}
+                  onChange={(e) => setChangeManagementFilters(prev => ({ ...prev, [field]: e.target.value }))}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: changeManagementFilters[field] ? '#dbeafe' : 'white',
+                    cursor: 'pointer',
+                    minWidth: '120px'
+                  }}
+                >
+                  <option value="">-- Select --</option>
+                  {values.map(val => (
+                    <option key={val} value={val}>{val}</option>
+                  ))}
+                </select>
+              </div>
+            )
+          ))}
+          
+          {Object.values(changeManagementFilters).some(v => v !== '') && (
+            <button
+              onClick={resetFilters}
+              style={{
+                padding: '6px 12px',
+                fontSize: '12px',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer'
+              }}
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+
+        <h3>Change Management Plan ({filteredChanges.length} of {documents.changeManagement.length} changes)</h3>
+        <div className="plan-table-container" style={{overflowX: 'auto', maxHeight: '600px'}}>
+          <table className="plan-table" style={{minWidth: '100%', fontSize: '12px'}}>
+            <thead style={{position: 'sticky', top: 0, zIndex: 1}}>
+              <tr>
+                <th style={{whiteSpace: 'nowrap', padding: '8px', width: '30px'}}>+</th>
+                {finalDisplayColumns.map((col, idx) => (
+                  <th key={idx} style={{whiteSpace: 'nowrap', padding: '8px'}}>{col}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredChanges.map((change, index) => (
+                <tr key={index} onClick={() => openChangeModal(change)} style={{cursor: 'pointer'}}>
+                  <td style={{padding: '6px 8px', textAlign: 'center'}}>
+                    ▶
+                  </td>
+                  {finalDisplayColumns.map((col, colIdx) => {
+                    const value = change[col];
+                    const cellClass = getCellClass(col, value);
+                    return (
+                      <td key={colIdx} style={{padding: '6px 8px', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis'}}>
+                        {cellClass ? (
+                          <span className={cellClass}>{formatValue(value, col)}</span>
+                        ) : (
+                          formatValue(value, col)
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {/* Change Detail Modal */}
+        {renderChangeModal()}
       </div>
     );
   };
@@ -1709,8 +2259,10 @@ function ProjectDocuments({ projectId, projectName }) {
         return renderStakeholders();
       case 'cadence':
         return renderRiskRegister();
-      case 'resources':
-        return renderResources();
+      case 'resource':
+        return renderResourceManagement();
+      case 'change':
+        return renderChangeManagement();
       case 'closure':
         return renderClosure();
       default:
