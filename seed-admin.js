@@ -22,36 +22,51 @@ const permissionSchema = new mongoose.Schema({
   description: String
 });
 
+const rolePermissionSchema = new mongoose.Schema({
+  role_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', required: true },
+  permission_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Permission', required: true }
+});
+
 const Role = mongoose.model('Role', roleSchema);
 const User = mongoose.model('User', userSchema);
 const Permission = mongoose.model('Permission', permissionSchema);
+const RolePermission = mongoose.model('RolePermission', rolePermissionSchema);
 
 async function seedAdmin() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
 
-    // Create permissions
+    // Create permissions (format: action_resource to match auth middleware)
     const permissions = [
-      { permission_name: 'Manage Projects', description: 'Can create, edit, and delete projects' },
-      { permission_name: 'View Projects', description: 'Can view projects' },
-      { permission_name: 'Manage Updates', description: 'Can create and edit weekly updates' },
-      { permission_name: 'Manage Users', description: 'Can create, edit, and delete users' },
-      { permission_name: 'Manage Import', description: 'Can import data from Excel files' }
+      { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
+      { permission_name: 'view_projects', description: 'Can view projects' },
+      { permission_name: 'manage_updates', description: 'Can create and edit weekly updates' },
+      { permission_name: 'manage_users', description: 'Can create, edit, and delete users' },
+      { permission_name: 'manage_import', description: 'Can import data from Excel files' }
     ];
 
     await Permission.deleteMany({});
     const createdPermissions = await Permission.insertMany(permissions);
     console.log('Permissions created');
 
-    // Create admin role with all permissions
+    // Create admin role
     await Role.deleteMany({ name: 'Admin' });
     const adminRole = await Role.create({
       name: 'Admin',
       description: 'Full system access',
-      permissions: createdPermissions.map(p => p._id)
+      permissions: []
     });
     console.log('Admin role created');
+
+    // Link all permissions to admin role
+    await RolePermission.deleteMany({ role_id: adminRole._id });
+    const rolePermissions = createdPermissions.map(p => ({
+      role_id: adminRole._id,
+      permission_id: p._id
+    }));
+    await RolePermission.insertMany(rolePermissions);
+    console.log('Role permissions linked');
 
     // Create admin user
     const hashedPassword = await bcrypt.hash('admin123', 10);
