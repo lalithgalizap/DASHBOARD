@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Edit, Archive, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Edit, Archive, ExternalLink, Upload } from 'lucide-react';
 import ProjectModal from '../components/ProjectModal';
 import UpdateModal from '../components/UpdateModal';
 import DetailsModal from '../components/DetailsModal';
 import ProjectDocuments from '../components/ProjectDocuments';
+import ExcelUploadModal from '../components/ExcelUploadModal';
+import { useAuth } from '../contexts/AuthContext';
 import './ProjectDetail.css';
 
 function ProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission, isAdmin } = useAuth();
   const [project, setProject] = useState(null);
   const [weeklyUpdates, setWeeklyUpdates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [editingUpdate, setEditingUpdate] = useState(null);
 
   useEffect(() => {
@@ -26,16 +30,14 @@ function ProjectDetail() {
   const fetchProjectDetails = async () => {
     try {
       setLoading(true);
-      const [projectRes, updatesRes] = await Promise.all([
-        axios.get(`/api/projects/${id}`),
-        axios.get('/api/weekly-updates', { params: { project: '' } })
-      ]);
-      
+      const projectRes = await axios.get(`/api/projects/${id}`);
       setProject(projectRes.data);
-      const projectUpdates = updatesRes.data.filter(
-        update => update.project_id === parseInt(id)
-      );
-      setWeeklyUpdates(projectUpdates);
+      
+      // Fetch weekly updates for this specific project using project name
+      const updatesRes = await axios.get('/api/weekly-updates', { 
+        params: { project: projectRes.data.name } 
+      });
+      setWeeklyUpdates(updatesRes.data);
     } catch (error) {
       console.error('Error fetching project details:', error);
     } finally {
@@ -58,7 +60,7 @@ function ProjectDetail() {
     try {
       const dataToSave = {
         ...updateData,
-        project_id: parseInt(id),
+        project_id: id,
         project_name: project.name,
         stage: project.stage
       };
@@ -255,6 +257,12 @@ function ProjectDetail() {
               </div>
             </div>
             <div className="project-header-actions">
+              {(isAdmin() || hasPermission('projects', 'manage')) && (
+                <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
+                  <Upload size={16} />
+                  Upload Document
+                </button>
+              )}
               <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
                 <Edit size={16} />
                 Edit Project
@@ -355,7 +363,7 @@ function ProjectDetail() {
       {showUpdateModal && (
         <UpdateModal
           update={editingUpdate || { 
-            project_id: parseInt(id), 
+            project_id: id, 
             project_name: project.name,
             stage: project.stage 
           }}
@@ -372,6 +380,14 @@ function ProjectDetail() {
           project={project}
           onClose={() => setShowDetailsModal(false)}
           onSave={handleSaveDetails}
+        />
+      )}
+
+      {showUploadModal && (
+        <ExcelUploadModal
+          currentProject={project}
+          onClose={() => setShowUploadModal(false)}
+          onUploadSuccess={fetchProjectDetails}
         />
       )}
     </div>

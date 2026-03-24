@@ -1,0 +1,290 @@
+{
+  "/PmoDashboardStack": [
+    {
+      "type": "aws:cdk:stack-tags",
+      "data": [
+        {
+          "key": "Application",
+          "value": "PMO-Dashboard"
+        },
+        {
+          "key": "Environment",
+          "value": "Production"
+        },
+        {
+          "key": "ManagedBy",
+          "value": "AWS-CDK"
+        }
+      ]
+    }
+  ],
+  "/PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider": [
+    {
+      "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+      "data": true
+    }
+  ],
+  "/PmoDashboardStack/AutoScalingGroup": [
+    {
+      "type": "aws:cdk:warning",
+      "data": "desiredCapacity has been configured. Be aware this will reset the size of your AutoScalingGroup on every deployment. See https://github.com/aws/aws-cdk/issues/5215 [ack: @aws-cdk/aws-autoscaling:desiredCapacitySet]",
+      "trace": [
+        "Annotations.addMessage (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:2270)",
+        "Annotations.addWarningV2 (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\node_modules\\aws-cdk-lib\\core\\lib\\annotations.js:1:984)",
+        "new AutoScalingGroup2 (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\node_modules\\aws-cdk-lib\\aws-autoscaling\\lib\\auto-scaling-group.js:1:25537)",
+        "new AutoScalingGroup2 (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\node_modules\\aws-cdk-lib\\core\\lib\\prop-injectable.js:1:726)",
+        "new PmoDashboardStack (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\lib\\pmo-dashboard-stack.ts:321:17)",
+        "Object.<anonymous> (C:\\Users\\Lalith Gali\\Desktop\\1\\DASHBOARD\\cdk\\bin\\pmo-dashboard-cdk.ts:14:1)",
+        "Module._compile (node:internal/modules/cjs/loader:1760:14)",
+        "Module.m._compile (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\index.ts:1618:23)",
+        "node:internal/modules/cjs/loader:1893:10",
+        "Object.require.extensions.<computed> [as .ts] (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\index.ts:1621:12)",
+        "Module.load (node:internal/modules/cjs/loader:1480:32)",
+        "Module._load (node:internal/modules/cjs/loader:1299:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:244:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "phase4 (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\bin.ts:649:14)",
+        "bootstrap (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\bin.ts:95:10)",
+        "main (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\bin.ts:55:10)",
+        "Object.<anonymous> (C:\\Users\\Lalith Gali\\AppData\\Local\\npm-cache\\_npx\\1bf7c3c15bf47d04\\node_modules\\ts-node\\src\\bin.ts:800:3)",
+        "Module._compile (node:internal/modules/cjs/loader:1760:14)",
+        "Object.<anonymous> (node:internal/modules/cjs/loader:1893:10)",
+        "Module.load (node:internal/modules/cjs/loader:1480:32)",
+        "Module._load (node:internal/modules/cjs/loader:1299:12)",
+        "TracingChannel.traceSync (node:diagnostics_channel:328:14)",
+        "wrapModuleLoad (node:internal/modules/cjs/loader:244:24)",
+        "Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)",
+        "node:internal/main/run_main_module:33:47"
+      ]
+    }
+  ],
+  "/PmoDashboardStack/LoadBalancerDNS": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LoadBalancerDNS"
+    }
+  ],
+  "/PmoDashboardStack/BackupBucketName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BackupBucketName"
+    }
+  ],
+  "/PmoDashboardStack/ApplicationURL": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationURL"
+    }
+  ],
+  "/PmoDashboardStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    }
+  ],
+  "/PmoDashboardStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpc28ACF57C"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/IGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcIGWD4110FDB"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/VPCGW": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcVPCGW8632554D"
+    }
+  ],
+  "/PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+    }
+  ],
+  "/PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardBackupBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardBackupBucket90FAF853"
+    }
+  ],
+  "/PmoDashboardStack/AlbSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlbSecurityGroup86A59E99"
+    }
+  ],
+  "/PmoDashboardStack/InstanceSecurityGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceSecurityGroup896E10BF"
+    }
+  ],
+  "/PmoDashboardStack/InstanceSecurityGroup/from PmoDashboardStackAlbSecurityGroupF930BB8E:5000": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceSecurityGroupfromPmoDashboardStackAlbSecurityGroupF930BB8E5000FA5FA6A0"
+    }
+  ],
+  "/PmoDashboardStack/InstanceSecurityGroup/from PmoDashboardStackAlbSecurityGroupF930BB8E:80": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceSecurityGroupfromPmoDashboardStackAlbSecurityGroupF930BB8E8012E7B49A"
+    }
+  ],
+  "/PmoDashboardStack/InstanceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceRole3CCE2F1D"
+    }
+  ],
+  "/PmoDashboardStack/LaunchTemplate/Profile": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LaunchTemplateProfile94AA77CE"
+    }
+  ],
+  "/PmoDashboardStack/LaunchTemplate/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "LaunchTemplate04EC5460"
+    }
+  ],
+  "/PmoDashboardStack/ApplicationLoadBalancer/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationLoadBalancerFD56DEE1"
+    }
+  ],
+  "/PmoDashboardStack/TargetGroup/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TargetGroup3D7CD9B8"
+    }
+  ],
+  "/PmoDashboardStack/AutoScalingGroup/ASG": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AutoScalingGroupASG804C35BE"
+    }
+  ],
+  "/PmoDashboardStack/AlarmTopic/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AlarmTopicD01E77F9"
+    }
+  ],
+  "/PmoDashboardStack/HighCpuAlarm/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "HighCpuAlarm40723000"
+    }
+  ],
+  "/PmoDashboardStack/UnhealthyHostAlarm/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UnhealthyHostAlarmA5C0898D"
+    }
+  ],
+  "/PmoDashboardStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet1Subnet3AC0EAC1"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet1RouteTable1575D5D6"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet1RouteTableAssociationE6708518"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet1DefaultRoute909792F8"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/Subnet": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet2Subnet359DA2BE"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/RouteTable": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet2RouteTableEB95B980"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/RouteTableAssociation": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet2RouteTableAssociation4E7BB260"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/DefaultRoute": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcPublicSubnet2DefaultRoute034E91BC"
+    }
+  ],
+  "/PmoDashboardStack/PmoDashboardVpc/RestrictDefaultSecurityGroupCustomResource/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "PmoDashboardVpcRestrictDefaultSecurityGroupCustomResourceEB773D8D"
+    }
+  ],
+  "/PmoDashboardStack/InstanceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "InstanceRoleDefaultPolicy1531605C"
+    }
+  ],
+  "/PmoDashboardStack/ApplicationLoadBalancer/HttpListener/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApplicationLoadBalancerHttpListener075DDBFE"
+    }
+  ],
+  "/PmoDashboardStack/AutoScalingGroup/ScalingPolicyCpuScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AutoScalingGroupScalingPolicyCpuScalingD20BF8F2"
+    }
+  ],
+  "/PmoDashboardStack/AutoScalingGroup/ScalingPolicyRequestScaling/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "AutoScalingGroupScalingPolicyRequestScalingCC814ED8"
+    }
+  ]
+}

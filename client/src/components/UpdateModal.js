@@ -68,7 +68,7 @@ function UpdateModal({ update, onClose, onSave }) {
 
   const handleProjectChange = (e) => {
     const projectId = e.target.value;
-    const selectedProject = projects.find(p => p.id === parseInt(projectId));
+    const selectedProject = projects.find(p => p.id === projectId);
     
     if (selectedProject) {
       setFormData({

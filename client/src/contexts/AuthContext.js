@@ -73,11 +73,14 @@ export const AuthProvider = ({ children }) => {
 
   const hasPermission = (resource, action) => {
     if (!user || !user.permissions) return false;
-    return user.permissions.some(p => p.resource === resource && p.action === action);
+    // Permissions are stored as strings like "view_dashboard", "manage_projects"
+    const requiredPermission = `${action}_${resource}`;
+    return user.permissions.includes(requiredPermission);
   };
 
   const isAdmin = () => {
-    return user?.role === 'Admin';
+    // Check if user has Admin role
+    return user?.role === 'Admin' || user?.role_name === 'Admin';
   };
 
   useEffect(() => {

@@ -6,11 +6,17 @@ const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const db = require('./database');
+const dbAdapter = require('./dbAdapter');
 const { authenticate, requirePermission, requireAdmin, getUserPermissions, generateToken } = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Initialize database adapter
+dbAdapter.initialize().catch(err => {
+  console.error('Failed to initialize database:', err);
+  process.exit(1);
+});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -18,91 +24,73 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const upload = multer({ dest: 'uploads/' });
 
-app.get('/api/projects', (req, res) => {
-  const { priority, stage, status, client } = req.query;
-  let query = 'SELECT * FROM projects WHERE 1=1';
-  const params = [];
-
-  if (priority && priority !== 'All') {
-    query += ' AND priority = ?';
-    params.push(priority);
-  }
-  if (stage && stage !== 'All') {
-    query += ' AND stage = ?';
-    params.push(stage);
-  }
-  if (status && status !== 'All') {
-    query += ' AND status = ?';
-    params.push(status);
-  }
-  if (client && client !== 'All') {
-    query += ' AND clients LIKE ?';
-    params.push(`%${client}%`);
-  }
-
-  query += ' ORDER BY id DESC';
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+// Configure multer for project documents
+const projectDocStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '..', 'project-documents');
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
-    res.json(rows);
-  });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  }
 });
 
-app.get('/api/projects/:id', (req, res) => {
-  db.get('SELECT * FROM projects WHERE id = ?', [req.params.id], (err, row) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+const projectDocUpload = multer({ 
+  storage: projectDocStorage,
+  fileFilter: (req, file, cb) => {
+    if (file.originalname.match(/\.(xlsx|xls)$/)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel files are allowed'));
     }
-    res.json(row);
-  });
+  }
 });
 
-app.post('/api/projects', authenticate, requirePermission('projects', 'manage'), (req, res) => {
-  const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
-  
-  db.run(
-    `INSERT INTO projects (name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      updateMetrics();
-      res.json({ id: this.lastID });
-    }
-  );
+app.get('/api/projects', async (req, res) => {
+  try {
+    const { priority, stage, status, client } = req.query;
+    const projects = await dbAdapter.getAllProjects({ priority, stage, status, client });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), (req, res) => {
-  const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
-  
-  db.run(
-    `UPDATE projects 
-     SET name = ?, priority = ?, stage = ?, summary = ?, status = ?, clients = ?, links = ?, owner = ?, vertical = ?, region = ?, sponsor = ?, anchor_customer = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer, req.params.id],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      updateMetrics();
-      res.json({ changes: this.changes });
-    }
-  );
+app.get('/api/projects/:id', async (req, res) => {
+  try {
+    const project = await dbAdapter.getProjectById(req.params.id);
+    res.json(project);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects', 'manage'), (req, res) => {
+app.post('/api/projects', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+  try {
+    const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
+    const result = await dbAdapter.createProject({ name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+  try {
+    const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
+    const result = await dbAdapter.updateProject(req.params.id, { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
   const { id, field } = req.params;
   const { value } = req.body;
-  
-  console.log(`[PATCH] Updating project ${id}, field: ${field}, value: ${value}`);
   
   // Whitelist allowed fields for security
   const allowedFields = {
@@ -112,43 +100,98 @@ app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects'
   };
   
   if (!allowedFields[field]) {
-    console.log(`[PATCH] Invalid field: ${field}`);
     res.status(400).json({ error: 'Invalid field' });
     return;
   }
   
-  // Build safe query with whitelisted field name
-  const query = `UPDATE projects SET ${allowedFields[field]} = ? WHERE id = ?`;
-  
-  db.run(query, [value, id], function(err) {
-    if (err) {
-      console.error(`[PATCH] Database error:`, err.message);
-      res.status(500).json({ error: err.message });
-      return;
+  try {
+    // Get current project
+    const project = await dbAdapter.getProjectById(id);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
     }
-    console.log(`[PATCH] Successfully updated ${this.changes} row(s)`);
-    res.json({ success: true, changes: this.changes, field, value });
-  });
+    
+    // Update the specific field
+    project[field] = value;
+    
+    // Use updateProject with the modified data
+    const result = await dbAdapter.updateProject(id, project);
+    res.json({ success: true, changes: result.changes, field, value });
+  } catch (err) {
+    console.error(`[PATCH] Error:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), (req, res) => {
-  db.run('DELETE FROM projects WHERE id = ?', [req.params.id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+  try {
+    // Get project details before deletion to find the Excel file
+    const project = await dbAdapter.getProjectById(req.params.id);
+    
+    if (project) {
+      // Delete the Excel file if it exists
+      const excelFilePath = path.join(__dirname, '..', 'project-documents', `${project.name}.xlsx`);
+      if (fs.existsSync(excelFilePath)) {
+        fs.unlinkSync(excelFilePath);
+        console.log(`[DELETE] Removed Excel file: ${project.name}.xlsx`);
+      }
     }
-    updateMetrics();
-    res.json({ changes: this.changes });
-  });
+    
+    // Delete the project from database
+    const result = await dbAdapter.deleteProject(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.get('/api/metrics', (req, res) => {
-  // Calculate metrics dynamically from projects table
-  db.all('SELECT status, clients, stage FROM projects', (err, projects) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
+// Upload project document
+app.post('/api/projects/upload-document', authenticate, requirePermission('projects', 'manage'), projectDocUpload.single('file'), async (req, res) => {
+  try {
+    const { projectId, projectName } = req.body;
+    
+    if (!projectId || !projectName) {
+      if (req.file) fs.unlinkSync(req.file.path);
+      return res.status(400).json({ error: 'Project ID and name are required' });
     }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Validate file name matches project name
+    const fileNameWithoutExt = req.file.originalname.replace(/\.(xlsx|xls)$/i, '');
+    if (fileNameWithoutExt !== projectName) {
+      fs.unlinkSync(req.file.path);
+      return res.status(400).json({ 
+        error: `File name must match project name: "${projectName}.xlsx"` 
+      });
+    }
+
+    // Verify project exists
+    const project = await dbAdapter.getProjectById(projectId);
+    if (!project) {
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    console.log(`[UPLOAD] Document uploaded successfully for project: ${projectName}`);
+    res.json({ 
+      message: 'Document uploaded successfully',
+      filename: req.file.originalname,
+      projectName: projectName
+    });
+  } catch (err) {
+    console.error('[UPLOAD] Error:', err);
+    if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/metrics', async (req, res) => {
+  try {
+    // Calculate metrics dynamically from projects table
+    const projects = await dbAdapter.getAllProjects({});
     
     // Count active projects (status = 'Active')
     const activeProjects = projects.filter(p => p.status === 'Active').length;
@@ -178,103 +221,64 @@ app.get('/api/metrics', (req, res) => {
     };
     
     res.json(metrics);
-  });
-});
-
-app.get('/api/events', (req, res) => {
-  db.all('SELECT * FROM events ORDER BY date ASC LIMIT 10', (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
-});
-
-app.post('/api/events', (req, res) => {
-  const { title, date, tag } = req.body;
-  
-  db.run(
-    'INSERT INTO events (title, date, tag) VALUES (?, ?, ?)',
-    [title, date, tag],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ id: this.lastID });
-    }
-  );
-});
-
-app.get('/api/weekly-updates', (req, res) => {
-  const { week, project } = req.query;
-  let query = 'SELECT * FROM weekly_updates WHERE 1=1';
-  const params = [];
-
-  if (week) {
-    query += ' AND week_date = ?';
-    params.push(week);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  if (project && project !== 'All Projects') {
-    query += ' AND project_name = ?';
-    params.push(project);
+});
+
+app.get('/api/events', async (req, res) => {
+  try {
+    const events = await dbAdapter.getAllEvents();
+    res.json(events.slice(0, 10));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  query += ' ORDER BY week_date DESC, project_name ASC';
-
-  db.all(query, params, (err, rows) => {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json(rows);
-  });
 });
 
-app.post('/api/weekly-updates', authenticate, requirePermission('updates', 'manage'), (req, res) => {
-  const { project_id, project_name, stage, week_date, name, rag, update_text, next_steps, blockers, customer_engagement, milestone_achieved, momentum, traction, objective } = req.body;
-  
-  db.run(
-    `INSERT INTO weekly_updates (project_id, project_name, stage, week_date, name, rag, update_text, next_steps, blockers, customer_engagement, milestone_achieved, momentum, traction, objective) 
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [project_id, project_name, stage, week_date, name, rag, update_text, next_steps, blockers, customer_engagement, milestone_achieved, momentum, traction, objective],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ id: this.lastID });
-    }
-  );
+app.post('/api/events', async (req, res) => {
+  try {
+    const result = await dbAdapter.createEvent(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.put('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), (req, res) => {
-  const { project_name, stage, week_date, name, rag, update_text, next_steps, blockers, customer_engagement, milestone_achieved, momentum, traction, objective } = req.body;
-  
-  db.run(
-    `UPDATE weekly_updates 
-     SET project_name = ?, stage = ?, week_date = ?, name = ?, rag = ?, update_text = ?, next_steps = ?, blockers = ?, customer_engagement = ?, milestone_achieved = ?, momentum = ?, traction = ?, objective = ?, updated_at = CURRENT_TIMESTAMP
-     WHERE id = ?`,
-    [project_name, stage, week_date, name, rag, update_text, next_steps, blockers, customer_engagement, milestone_achieved, momentum, traction, objective, req.params.id],
-    function(err) {
-      if (err) {
-        res.status(500).json({ error: err.message });
-        return;
-      }
-      res.json({ changes: this.changes });
-    }
-  );
+app.get('/api/weekly-updates', async (req, res) => {
+  try {
+    const { week, project } = req.query;
+    const updates = await dbAdapter.getAllWeeklyUpdates({ week, project });
+    res.json(updates);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.delete('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), (req, res) => {
-  db.run('DELETE FROM weekly_updates WHERE id = ?', [req.params.id], function(err) {
-    if (err) {
-      res.status(500).json({ error: err.message });
-      return;
-    }
-    res.json({ changes: this.changes });
-  });
+app.post('/api/weekly-updates', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
+  try {
+    const result = await dbAdapter.createWeeklyUpdate(req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
+  try {
+    const result = await dbAdapter.updateWeeklyUpdate(req.params.id, req.body);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
+  try {
+    const result = await dbAdapter.deleteWeeklyUpdate(req.params.id);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/import/excel', authenticate, requirePermission('import', 'manage'), upload.single('file'), (req, res) => {
@@ -315,7 +319,6 @@ app.post('/api/import/excel', authenticate, requirePermission('import', 'manage'
           return;
         }
 
-        updateMetrics();
         res.json({ message: 'Import successful', count: data.length });
       });
     });
@@ -325,49 +328,42 @@ app.post('/api/import/excel', authenticate, requirePermission('import', 'manage'
   }
 });
 
-function updateMetrics() {
-  db.get(`
-    SELECT 
-      COUNT(*) as total,
-      SUM(CASE WHEN status NOT IN ('Complete', 'On-hold', 'Archived') THEN 1 ELSE 0 END) as active,
-      SUM(CASE WHEN status = 'On-hold' THEN 1 ELSE 0 END) as paused,
-      SUM(CASE WHEN stage = 'Incubate' THEN 1 ELSE 0 END) as incubate,
-      SUM(CASE WHEN priority IN ('P0', 'P1') THEN 1 ELSE 0 END) as pr_projects,
-      SUM(CASE WHEN status IN ('On-track', 'Active') THEN 1 ELSE 0 END) as on_track,
-      0 as budget_expended,
-      0 as budget_recommended
-    FROM projects
-  `, (err, row) => {
-    if (err) return;
-    
-    db.run(`
-      UPDATE metrics SET 
-        active_initiatives = ?,
-        paused_initiatives = ?,
-        incubate_initiatives = ?,
-        pr_projects = ?,
-        on_track = ?,
-        total_projects = ?,
-        budget_expended = ?,
-        budget_recommended = ?,
-        updated_at = CURRENT_TIMESTAMP
-    `, [row.active, row.paused, row.incubate, row.pr_projects, row.on_track, row.total, row.budget_expended, row.budget_recommended]);
-  });
-}
 
 // Get project documents from Excel
-app.get('/api/projects/:id/documents', (req, res) => {
-  // Prevent caching to ensure fresh data on each request
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  
+app.get('/api/projects/:id/documents', authenticate, async (req, res) => {
   try {
-    // Use the standardized PM workbook
-    const excelFilePath = path.join(__dirname, '..', 'All_in_One_PM_Workbook.xlsx');
-    console.log(`[${new Date().toISOString()}] Reading Excel file: ${excelFilePath} for project ${req.params.id}...`);
+    const projectId = req.params.id;
     
-    const workbook = XLSX.readFile(excelFilePath);
+    // Get project to find its name
+    const project = await dbAdapter.getProjectById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    
+    // Look for project-specific Excel file
+    const filePath = path.join(__dirname, '..', 'project-documents', `${project.name}.xlsx`);
+    
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      console.log(`[DOCUMENTS] No Excel file found for project: ${project.name}`);
+      return res.json({
+        raidLog: [],
+        raidDashboard: {},
+        riskRegister: [],
+        projectCharter: {},
+        projectCover: {},
+        projectPlan: [],
+        milestoneTracker: [],
+        stakeholderRegister: [],
+        raciMatrix: [],
+        resourceManagementPlan: [],
+        governanceCadences: [],
+        changeManagement: []
+      });
+    }
+    
+    console.log(`[${new Date().toISOString()}] Reading Excel file: ${filePath}`);
+    const workbook = XLSX.readFile(filePath);
     
     const documents = {
       // RAID data
@@ -428,12 +424,6 @@ app.get('/api/projects/:id/documents', (req, res) => {
       const worksheet = workbook.Sheets['Project Cover Sheet'];
       const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
       
-      // Debug: Log raw data structure
-      console.log('[Charter Debug] Project Cover Sheet raw data (first 15 rows):');
-      for (let i = 0; i < Math.min(15, rawData.length); i++) {
-        console.log(`  Row ${i}:`, rawData[i]);
-      }
-      
       // Helper to safely get cell value
       const getCell = (row, col) => {
         if (row < rawData.length && col < rawData[row].length) {
@@ -492,9 +482,7 @@ app.get('/api/projects/:id/documents', (req, res) => {
         rawData: rawData
       };
 
-      console.log('[Charter Debug] Parsed values:', charter.basicInfo);
       documents.projectCharter = charter;
-      console.log(`[Charter] Parsed from Cover Sheet: ${charter.basicInfo.projectName}, Manager: ${charter.basicInfo.projectManager}`);
     }
     
     // Read Project Plan
@@ -527,15 +515,9 @@ app.get('/api/projects/:id/documents', (req, res) => {
     
     // Read Resource Management Plan
     if (workbook.SheetNames.includes('Resource Management Plan')) {
-      console.log('[DEBUG] Resource Management Plan sheet found');
       const worksheet = workbook.Sheets['Resource Management Plan'];
       const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-      console.log('[DEBUG] Raw data rows:', data.length);
-      console.log('[DEBUG] First row keys:', data.length > 0 ? Object.keys(data[0]) : 'No data');
       documents.resourceManagementPlan = data.filter(item => Object.values(item).some(v => v && v !== ''));
-      console.log('[DEBUG] Filtered count:', documents.resourceManagementPlan.length);
-    } else {
-      console.log('[DEBUG] Resource Management Plan sheet NOT found. Available sheets:', workbook.SheetNames);
     }
     
     // Read Resource Availability
@@ -559,17 +541,11 @@ app.get('/api/projects/:id/documents', (req, res) => {
       documents.changeManagement = data.filter(item => item['Change ID']);
     }
     
-    console.log(`[${new Date().toISOString()}] Returning data from All_in_One_PM_Workbook.xlsx`);
-    console.log(`  - RAID Log: ${documents.raidLog.length} items`);
-    console.log(`  - Risk Register: ${documents.riskRegister.length} items`);
-    console.log(`  - Project Plan: ${documents.projectPlan.length} tasks`);
-    console.log(`  - Milestones: ${documents.milestoneTracker.length} milestones`);
-    console.log(`  - Stakeholders: ${documents.stakeholderRegister.length} stakeholders`);
     res.json(documents);
   } catch (error) {
-    console.error(`Error reading Excel file All_in_One_PM_Workbook.xlsx:`, error.message);
+    console.error(`Error reading Excel file:`, error.message);
     res.status(500).json({ 
-      error: `Failed to read project documents from All_in_One_PM_Workbook.xlsx. Make sure the file exists in the project root directory.` 
+      error: `Failed to read project documents. ${error.message}` 
     });
   }
 });
@@ -577,364 +553,256 @@ app.get('/api/projects/:id/documents', (req, res) => {
 // ========== PROJECT SCOPE ENDPOINTS ==========
 
 // Get project scope
-app.get('/api/projects/:id/scope', authenticate, (req, res) => {
-  const projectId = req.params.id;
-  
-  db.get(
-    `SELECT scope_included, scope_excluded FROM project_scope WHERE project_id = ?`,
-    [projectId],
-    (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      
-      if (!row) {
-        return res.json({ 
-          scope_included: '', 
-          scope_excluded: '' 
-        });
-      }
-      
-      res.json({
-        scope_included: row.scope_included || '',
-        scope_excluded: row.scope_excluded || ''
-      });
+app.get('/api/projects/:id/scope', authenticate, async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const scope = await dbAdapter.getProjectScope(projectId);
+    
+    if (!scope) {
+      return res.json({ scope_included: '', scope_excluded: '' });
     }
-  );
+    
+    res.json(scope);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Update project scope
-app.put('/api/projects/:id/scope', authenticate, (req, res) => {
+app.put('/api/projects/:id/scope', authenticate, async (req, res) => {
   const projectId = req.params.id;
   const { scope_included, scope_excluded } = req.body;
   
-  db.get(
-    `SELECT id FROM project_scope WHERE project_id = ?`,
-    [projectId],
-    (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      
-      if (row) {
-        // Update existing
-        db.run(
-          `UPDATE project_scope SET scope_included = ?, scope_excluded = ?, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?`,
-          [scope_included, scope_excluded, projectId],
-          function(err) {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
-            res.json({ message: 'Scope updated successfully' });
-          }
-        );
-      } else {
-        // Insert new
-        db.run(
-          `INSERT INTO project_scope (project_id, scope_included, scope_excluded) VALUES (?, ?, ?)`,
-          [projectId, scope_included, scope_excluded],
-          function(err) {
-            if (err) {
-              return res.status(500).json({ error: err.message });
-            }
-            res.json({ message: 'Scope created successfully', id: this.lastID });
-          }
-        );
-      }
-    }
-  );
+  try {
+    await dbAdapter.upsertProjectScope(projectId, { scope_included, scope_excluded });
+    res.json({ message: 'Scope updated successfully' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // ========== AUTHENTICATION ENDPOINTS ==========
 
 // Login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { username, password } = req.body;
   
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  db.get(
-    `SELECT u.*, r.name as role_name 
-     FROM users u 
-     LEFT JOIN roles r ON u.role_id = r.id 
-     WHERE u.username = ? AND u.is_active = 1`,
-    [username],
-    (err, user) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      
-      if (!user) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      const validPassword = bcrypt.compareSync(password, user.password);
-      if (!validPassword) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-
-      db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
-
-      getUserPermissions(user.id, (permErr, permissions) => {
-        const token = generateToken(user);
-        res.json({
-          token,
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            role: user.role_name,
-            role_id: user.role_id,
-            permissions: permissions || []
-          }
-        });
-      });
+  try {
+    const user = await dbAdapter.getUserByUsername(username);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-  );
+
+    const validPassword = bcrypt.compareSync(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const permissions = await getUserPermissions(user.id);
+    const token = generateToken(user);
+    
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role_id: user.role_id,
+        role: user.role,
+        role_name: user.role_name,
+        permissions: permissions || []
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Get current user
-app.get('/api/auth/me', authenticate, (req, res) => {
-  db.get(
-    `SELECT u.id, u.username, u.email, u.role_id, u.is_active, u.last_login, u.created_at, r.name as role_name
-     FROM users u 
-     LEFT JOIN roles r ON u.role_id = r.id 
-     WHERE u.id = ?`,
-    [req.user.id],
-    (err, user) => {
-      if (err || !user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      getUserPermissions(user.id, (permErr, permissions) => {
-        res.json({
-          user: {
-            ...user,
-            permissions: permissions || []
-          }
-        });
-      });
+app.get('/api/auth/me', authenticate, async (req, res) => {
+  try {
+    const user = await dbAdapter.getUserById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
-  );
+
+    const permissions = await getUserPermissions(user.id);
+    
+    res.json({
+      user: {
+        ...user,
+        permissions: permissions || []
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // ========== USER MANAGEMENT (Admin only) ==========
 
 // Get all users
-app.get('/api/users', authenticate, requireAdmin, (req, res) => {
-  db.all(
-    `SELECT u.id, u.username, u.email, u.is_active, u.last_login, u.created_at, 
-            r.id as role_id, r.name as role_name
-     FROM users u 
-     LEFT JOIN roles r ON u.role_id = r.id 
-     ORDER BY u.created_at DESC`,
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.json(rows);
-    }
-  );
+app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const users = await dbAdapter.getAllUsers();
+    res.json(users);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Create user
-app.post('/api/users', authenticate, requireAdmin, (req, res) => {
+app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
   const { username, email, password, role_id, is_active } = req.body;
   
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Username, email, and password are required' });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  
-  db.run(
-    `INSERT INTO users (username, email, password, role_id, is_active) VALUES (?, ?, ?, ?, ?)`,
-    [username, email, hashedPassword, role_id || null, is_active !== undefined ? is_active : 1],
-    function(err) {
-      if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(409).json({ error: 'Username or email already exists' });
-        }
-        return res.status(500).json({ error: err.message });
-      }
-      res.json({ id: this.lastID, message: 'User created successfully' });
+  try {
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const result = await dbAdapter.createUser({ username, email, password: hashedPassword, role_id: role_id || null });
+    res.json({ ...result, message: 'User created successfully' });
+  } catch (err) {
+    if (err.message.includes('duplicate') || err.message.includes('unique')) {
+      return res.status(409).json({ error: 'Username or email already exists' });
     }
-  );
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // Update user
-app.put('/api/users/:id', authenticate, requireAdmin, (req, res) => {
-  const { username, email, role_id, is_active, password } = req.body;
-  const updates = [];
-  const params = [];
-
-  if (username) { updates.push('username = ?'); params.push(username); }
-  if (email) { updates.push('email = ?'); params.push(email); }
-  if (role_id !== undefined) { updates.push('role_id = ?'); params.push(role_id); }
-  if (is_active !== undefined) { updates.push('is_active = ?'); params.push(is_active); }
-  if (password) { updates.push('password = ?'); params.push(bcrypt.hashSync(password, 10)); }
-  
-  if (updates.length === 0) {
-    return res.status(400).json({ error: 'No fields to update' });
-  }
-
-  updates.push('updated_at = CURRENT_TIMESTAMP');
-  params.push(req.params.id);
-
-  db.run(
-    `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
-    params,
-    function(err) {
-      if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(409).json({ error: 'Username or email already exists' });
-        }
-        return res.status(500).json({ error: err.message });
-      }
-      res.json({ changes: this.changes, message: 'User updated successfully' });
+app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { username, email, password, role_id } = req.body;
+    
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (password) updateData.password = password;
+    if (role_id) updateData.role_id = role_id;
+    
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
     }
-  );
+    
+    const result = await dbAdapter.updateUser(req.params.id, updateData);
+    res.json({ changes: result.changes, message: 'User updated successfully' });
+  } catch (err) {
+    if (err.message && err.message.includes('duplicate')) {
+      return res.status(409).json({ error: 'Username or email already exists' });
+    }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Delete user
-app.delete('/api/users/:id', authenticate, requireAdmin, (req, res) => {
-  if (parseInt(req.params.id) === req.user.id) {
-    return res.status(400).json({ error: 'Cannot delete your own account' });
-  }
-
-  db.run('DELETE FROM users WHERE id = ?', [req.params.id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
+app.delete('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
     }
-    res.json({ changes: this.changes, message: 'User deleted successfully' });
-  });
+
+    const result = await dbAdapter.deleteUser(req.params.id);
+    res.json({ changes: result.changes, message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ========== ROLE MANAGEMENT (Admin only) ==========
 
 // Get all roles with permissions
-app.get('/api/roles', authenticate, requireAdmin, (req, res) => {
-  db.all('SELECT * FROM roles ORDER BY name', (err, roles) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    
-    db.all(
-      `SELECT rp.role_id, p.id as permission_id, p.name, p.description, p.resource, p.action
-       FROM role_permissions rp
-       JOIN permissions p ON rp.permission_id = p.id`,
-      (permErr, permissions) => {
-        if (permErr) {
-          return res.status(500).json({ error: permErr.message });
-        }
-        
-        const rolesWithPerms = roles.map(role => ({
-          ...role,
-          permissions: permissions.filter(p => p.role_id === role.id)
-        }));
-        
-        res.json(rolesWithPerms);
-      }
+app.get('/api/roles', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const roles = await dbAdapter.getAllRoles();
+    const rolesWithPermissions = await Promise.all(
+      roles.map(async (role) => {
+        const permissions = await dbAdapter.getRolePermissions(role.id);
+        return { ...role, permissions };
+      })
     );
-  });
+    res.json(rolesWithPermissions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Get all permissions
-app.get('/api/permissions', authenticate, requireAdmin, (req, res) => {
-  db.all('SELECT * FROM permissions ORDER BY resource, action', (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-  });
+app.get('/api/permissions', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const permissions = await dbAdapter.getAllPermissions();
+    res.json(permissions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Create role
-app.post('/api/roles', authenticate, requireAdmin, (req, res) => {
-  const { name, description, permission_ids } = req.body;
-  
-  if (!name) {
-    return res.status(400).json({ error: 'Role name is required' });
-  }
-
-  db.run(
-    'INSERT INTO roles (name, description) VALUES (?, ?)',
-    [name, description || ''],
-    function(err) {
-      if (err) {
-        if (err.message.includes('UNIQUE constraint failed')) {
-          return res.status(409).json({ error: 'Role name already exists' });
-        }
-        return res.status(500).json({ error: err.message });
-      }
-      
-      const roleId = this.lastID;
-      
-      if (permission_ids && permission_ids.length > 0) {
-        const stmt = db.prepare('INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
-        permission_ids.forEach(permId => {
-          stmt.run(roleId, permId);
-        });
-        stmt.finalize();
-      }
-      
-      res.json({ id: roleId, message: 'Role created successfully' });
+app.post('/api/roles', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, permission_ids } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Role name is required' });
     }
-  );
+
+    const result = await dbAdapter.createRole({ role_name: name, description });
+    
+    if (permission_ids && permission_ids.length > 0) {
+      await dbAdapter.updateRolePermissions(result.id, permission_ids);
+    }
+    
+    res.json({ id: result.id, message: 'Role created successfully' });
+  } catch (err) {
+    if (err.message && err.message.includes('duplicate')) {
+      return res.status(409).json({ error: 'Role name already exists' });
+    }
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Update role
-app.put('/api/roles/:id', authenticate, requireAdmin, (req, res) => {
-  const { name, description, permission_ids } = req.body;
-  const roleId = req.params.id;
-  
-  const updates = [];
-  const params = [];
-  
-  if (name) { updates.push('name = ?'); params.push(name); }
-  if (description !== undefined) { updates.push('description = ?'); params.push(description); }
-  
-  if (updates.length > 0) {
-    params.push(roleId);
-    db.run(
-      `UPDATE roles SET ${updates.join(', ')} WHERE id = ?`,
-      params,
-      function(err) {
-        if (err) {
-          if (err.message.includes('UNIQUE constraint failed')) {
-            return res.status(409).json({ error: 'Role name already exists' });
-          }
-          return res.status(500).json({ error: err.message });
-        }
-      }
-    );
+app.put('/api/roles/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, permission_ids } = req.body;
+    const roleId = req.params.id;
+    
+    const updateData = {};
+    if (name) updateData.role_name = name;
+    if (description !== undefined) updateData.description = description;
+    
+    if (Object.keys(updateData).length > 0) {
+      await dbAdapter.updateRole(roleId, updateData);
+    }
+    
+    if (permission_ids !== undefined) {
+      await dbAdapter.updateRolePermissions(roleId, permission_ids);
+    }
+    
+    res.json({ message: 'Role updated successfully' });
+  } catch (err) {
+    if (err.message && err.message.includes('duplicate')) {
+      return res.status(409).json({ error: 'Role name already exists' });
+    }
+    res.status(500).json({ error: err.message });
   }
-  
-  if (permission_ids) {
-    db.run('DELETE FROM role_permissions WHERE role_id = ?', [roleId], (err) => {
-      if (!err && permission_ids.length > 0) {
-        const stmt = db.prepare('INSERT INTO role_permissions (role_id, permission_id) VALUES (?, ?)');
-        permission_ids.forEach(permId => {
-          stmt.run(roleId, permId);
-        });
-        stmt.finalize();
-      }
-    });
-  }
-  
-  res.json({ message: 'Role updated successfully' });
 });
 
 // Delete role
-app.delete('/api/roles/:id', authenticate, requireAdmin, (req, res) => {
-  db.run('DELETE FROM roles WHERE id = ?', [req.params.id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json({ changes: this.changes, message: 'Role deleted successfully' });
-  });
+app.delete('/api/roles/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await dbAdapter.deleteRole(req.params.id);
+    res.json({ changes: result.changes, message: 'Role deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

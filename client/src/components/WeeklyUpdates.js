@@ -8,6 +8,7 @@ import './WeeklyUpdates.css';
 function WeeklyUpdates() {
   const { hasPermission } = useAuth();
   const [updates, setUpdates] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [selectedWeek, setSelectedWeek] = useState('');
   const [selectedProject, setSelectedProject] = useState('All Projects');
   const [loading, setLoading] = useState(true);
@@ -15,8 +16,18 @@ function WeeklyUpdates() {
   const [editingUpdate, setEditingUpdate] = useState(null);
 
   useEffect(() => {
+    fetchProjects();
     fetchUpdates();
   }, [selectedWeek, selectedProject]);
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get('/api/projects');
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
 
   const fetchUpdates = async () => {
     try {
@@ -78,9 +89,11 @@ function WeeklyUpdates() {
             className="project-filter"
           >
             <option>All Projects</option>
-            <option>Contact Graph</option>
-            <option>TextBot MCP</option>
-            <option>Voca.AI</option>
+            {projects.map(project => (
+              <option key={project.id} value={project.name}>
+                {project.name}
+              </option>
+            ))}
           </select>
           {hasPermission('updates', 'manage') && (
             <button className="add-update-btn" onClick={() => {

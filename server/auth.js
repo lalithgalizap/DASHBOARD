@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('./database');
+const dbAdapter = require('./dbAdapter');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'pmo-dashboard-secret-key-2024';
 
@@ -22,70 +22,68 @@ const authenticate = (req, res, next) => {
 };
 
 const requirePermission = (resource, action) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Access denied. Not authenticated.' });
     }
 
-    const userId = req.user.id;
-    
-    db.get(
-      `SELECT r.id as role_id, p.id as permission_id
-       FROM users u
-       JOIN roles r ON u.role_id = r.id
-       JOIN role_permissions rp ON r.id = rp.role_id
-       JOIN permissions p ON rp.permission_id = p.id
-       WHERE u.id = ? AND u.is_active = 1 AND p.resource = ? AND p.action = ?`,
-      [userId, resource, action],
-      (err, row) => {
-        if (err) {
-          return res.status(500).json({ error: 'Error checking permissions.' });
-        }
-        
-        if (!row) {
-          return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
-        }
-        
-        next();
+    try {
+      const userId = req.user.id;
+      const permissions = await dbAdapter.getUserPermissions(userId);
+      
+      // Permission names are like: "view_projects", "manage_projects"
+      // We need to match: action_resource (e.g., "view" + "_" + "projects")
+      const requiredPermission = `${action}_${resource}`;
+      const hasPermission = permissions.includes(requiredPermission);
+      
+      if (!hasPermission) {
+        console.log(`Permission denied: User ${userId} needs '${requiredPermission}', has:`, permissions);
+        return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
       }
-    );
+      
+      next();
+    } catch (err) {
+      console.error('Permission check error:', err);
+      return res.status(500).json({ error: 'Error checking permissions.' });
+    }
   };
 };
 
-const requireAdmin = (req, res, next) => {
+const requireAdmin = async (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Access denied. Not authenticated.' });
   }
 
-  db.get(
-    `SELECT r.name FROM users u JOIN roles r ON u.role_id = r.id WHERE u.id = ?`,
-    [req.user.id],
-    (err, row) => {
-      if (err || !row || row.name !== 'Admin') {
-        return res.status(403).json({ error: 'Access denied. Admin required.' });
-      }
-      next();
+  try {
+    const user = await dbAdapter.getUserById(req.user.id);
+    if (!user || !user.role_id) {
+      return res.status(403).json({ error: 'Access denied. Admin required.' });
     }
-  );
+    
+    const role = await dbAdapter.getRoleByName('Admin');
+    if (!role || user.role_id !== role.id) {
+      return res.status(403).json({ error: 'Access denied. Admin required.' });
+    }
+    
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Error checking admin status.' });
+  }
 };
 
-const getUserPermissions = (userId, callback) => {
-  db.all(
-    `SELECT p.name, p.resource, p.action
-     FROM users u
-     JOIN roles r ON u.role_id = r.id
-     JOIN role_permissions rp ON r.id = rp.role_id
-     JOIN permissions p ON rp.permission_id = p.id
-     WHERE u.id = ? AND u.is_active = 1`,
-    [userId],
-    (err, rows) => {
-      if (err) {
-        callback(err, null);
-        return;
-      }
-      callback(null, rows);
+const getUserPermissions = async (userId, callback) => {
+  try {
+    const permissions = await dbAdapter.getUserPermissions(userId);
+    if (callback) {
+      callback(null, permissions);
     }
-  );
+    return permissions;
+  } catch (err) {
+    if (callback) {
+      callback(err, null);
+    }
+    throw err;
+  }
 };
 
 const generateToken = (user) => {

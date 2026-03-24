@@ -182,10 +182,21 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
+  border: none;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upload-btn {
+  background-color: #10b981;
+  color: white;
+}
+
+.upload-btn:hover {
+  background-color: #059669;
 }
 
 .edit-btn {
@@ -198,13 +209,12 @@
 }
 
 .archive-btn {
-  background-color: #f3f4f6;
-  color: #1f2937;
-  border: 1px solid #d1d5db;
+  background-color: #ef4444;
+  color: white;
 }
 
 .archive-btn:hover {
-  background-color: #e5e7eb;
+  background-color: #dc2626;
 }
 
 /* Content Sections */

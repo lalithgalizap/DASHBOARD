@@ -1,0 +1,1105 @@
+{
+ "Description": "PMO Dashboard Application Infrastructure with High Availability",
+ "Resources": {
+  "PmoDashboardVpc28ACF57C": {
+   "Type": "AWS::EC2::VPC",
+   "Properties": {
+    "CidrBlock": "10.0.0.0/16",
+    "EnableDnsHostnames": true,
+    "EnableDnsSupport": true,
+    "InstanceTenancy": "default",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/Resource"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet1Subnet3AC0EAC1": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1a",
+    "CidrBlock": "10.0.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet1RouteTable1575D5D6": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1"
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet1RouteTableAssociationE6708518": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PmoDashboardVpcPublicSubnet1RouteTable1575D5D6"
+    },
+    "SubnetId": {
+     "Ref": "PmoDashboardVpcPublicSubnet1Subnet3AC0EAC1"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet1DefaultRoute909792F8": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "PmoDashboardVpcIGWD4110FDB"
+    },
+    "RouteTableId": {
+     "Ref": "PmoDashboardVpcPublicSubnet1RouteTable1575D5D6"
+    }
+   },
+   "DependsOn": [
+    "PmoDashboardVpcVPCGW8632554D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet2Subnet359DA2BE": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-east-1b",
+    "CidrBlock": "10.0.1.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/Subnet"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet2RouteTableEB95B980": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2"
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/RouteTable"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet2RouteTableAssociation4E7BB260": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "PmoDashboardVpcPublicSubnet2RouteTableEB95B980"
+    },
+    "SubnetId": {
+     "Ref": "PmoDashboardVpcPublicSubnet2Subnet359DA2BE"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/RouteTableAssociation"
+   }
+  },
+  "PmoDashboardVpcPublicSubnet2DefaultRoute034E91BC": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "PmoDashboardVpcIGWD4110FDB"
+    },
+    "RouteTableId": {
+     "Ref": "PmoDashboardVpcPublicSubnet2RouteTableEB95B980"
+    }
+   },
+   "DependsOn": [
+    "PmoDashboardVpcVPCGW8632554D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/PublicSubnet2/DefaultRoute"
+   }
+  },
+  "PmoDashboardVpcIGWD4110FDB": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "PmoDashboardStack/PmoDashboardVpc"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/IGW"
+   }
+  },
+  "PmoDashboardVpcVPCGW8632554D": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "PmoDashboardVpcIGWD4110FDB"
+    },
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/VPCGW"
+   }
+  },
+  "PmoDashboardVpcRestrictDefaultSecurityGroupCustomResourceEB773D8D": {
+   "Type": "Custom::VpcRestrictDefaultSG",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+      "Arn"
+     ]
+    },
+    "DefaultSecurityGroupId": {
+     "Fn::GetAtt": [
+      "PmoDashboardVpc28ACF57C",
+      "DefaultSecurityGroup"
+     ]
+    },
+    "Account": "148617059060"
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardVpc/RestrictDefaultSecurityGroupCustomResource/Default"
+   }
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Version": "2012-10-17",
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ]
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+     }
+    ],
+    "Policies": [
+     {
+      "PolicyName": "Inline",
+      "PolicyDocument": {
+       "Version": "2012-10-17",
+       "Statement": [
+        {
+         "Effect": "Allow",
+         "Action": [
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:AuthorizeSecurityGroupEgress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupEgress"
+         ],
+         "Resource": [
+          {
+           "Fn::Join": [
+            "",
+            [
+             "arn:aws:ec2:us-east-1:148617059060:security-group/",
+             {
+              "Fn::GetAtt": [
+               "PmoDashboardVpc28ACF57C",
+               "DefaultSecurityGroup"
+              ]
+             }
+            ]
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role"
+   }
+  },
+  "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-148617059060-us-east-1",
+     "S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip"
+    },
+    "Timeout": 900,
+    "MemorySize": 128,
+    "Handler": "__entrypoint__.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs22.x",
+    "Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group"
+   },
+   "DependsOn": [
+    "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler",
+    "aws:asset:path": "asset.7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200",
+    "aws:asset:property": "Code"
+   }
+  },
+  "PmoDashboardBackupBucket90FAF853": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketEncryption": {
+     "ServerSideEncryptionConfiguration": [
+      {
+       "ServerSideEncryptionByDefault": {
+        "SSEAlgorithm": "AES256"
+       }
+      }
+     ]
+    },
+    "BucketName": "pmo-dashboard-backups-148617059060",
+    "LifecycleConfiguration": {
+     "Rules": [
+      {
+       "ExpirationInDays": 30,
+       "Id": "DeleteOldBackups",
+       "Status": "Enabled"
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    },
+    "VersioningConfiguration": {
+     "Status": "Enabled"
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/PmoDashboardBackupBucket/Resource"
+   }
+  },
+  "AlbSecurityGroup86A59E99": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for PMO Dashboard ALB",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow HTTP traffic from anywhere",
+      "FromPort": 80,
+      "IpProtocol": "tcp",
+      "ToPort": 80
+     },
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow HTTPS traffic from anywhere",
+      "FromPort": 443,
+      "IpProtocol": "tcp",
+      "ToPort": 443
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/AlbSecurityGroup/Resource"
+   }
+  },
+  "InstanceSecurityGroup896E10BF": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for PMO Dashboard EC2 instances",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "SecurityGroupIngress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow SSH access (restrict to your IP in production)",
+      "FromPort": 22,
+      "IpProtocol": "tcp",
+      "ToPort": 22
+     }
+    ],
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/InstanceSecurityGroup/Resource"
+   }
+  },
+  "InstanceSecurityGroupfromPmoDashboardStackAlbSecurityGroupF930BB8E5000FA5FA6A0": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow traffic from ALB to Node.js app",
+    "FromPort": 5000,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "InstanceSecurityGroup896E10BF",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AlbSecurityGroup86A59E99",
+      "GroupId"
+     ]
+    },
+    "ToPort": 5000
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/InstanceSecurityGroup/from PmoDashboardStackAlbSecurityGroupF930BB8E:5000"
+   }
+  },
+  "InstanceSecurityGroupfromPmoDashboardStackAlbSecurityGroupF930BB8E8012E7B49A": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Load balancer to target",
+    "FromPort": 80,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "InstanceSecurityGroup896E10BF",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AlbSecurityGroup86A59E99",
+      "GroupId"
+     ]
+    },
+    "ToPort": 80
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/InstanceSecurityGroup/from PmoDashboardStackAlbSecurityGroupF930BB8E:80"
+   }
+  },
+  "InstanceRole3CCE2F1D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ec2.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/CloudWatchAgentServerPolicy"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/AmazonSSMManagedInstanceCore"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/InstanceRole/Resource"
+   }
+  },
+  "InstanceRoleDefaultPolicy1531605C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "PmoDashboardBackupBucket90FAF853",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "PmoDashboardBackupBucket90FAF853",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "InstanceRoleDefaultPolicy1531605C",
+    "Roles": [
+     {
+      "Ref": "InstanceRole3CCE2F1D"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/InstanceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LaunchTemplateProfile94AA77CE": {
+   "Type": "AWS::IAM::InstanceProfile",
+   "Properties": {
+    "Roles": [
+     {
+      "Ref": "InstanceRole3CCE2F1D"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/LaunchTemplate/Profile"
+   }
+  },
+  "LaunchTemplate04EC5460": {
+   "Type": "AWS::EC2::LaunchTemplate",
+   "Properties": {
+    "LaunchTemplateData": {
+     "BlockDeviceMappings": [
+      {
+       "DeviceName": "/dev/sda1",
+       "Ebs": {
+        "Encrypted": true,
+        "VolumeSize": 30,
+        "VolumeType": "gp3"
+       }
+      }
+     ],
+     "IamInstanceProfile": {
+      "Arn": {
+       "Fn::GetAtt": [
+        "LaunchTemplateProfile94AA77CE",
+        "Arn"
+       ]
+      }
+     },
+     "ImageId": "ami-00de3875b03809ec5",
+     "InstanceType": "t3.small",
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "InstanceSecurityGroup896E10BF",
+        "GroupId"
+       ]
+      }
+     ],
+     "TagSpecifications": [
+      {
+       "ResourceType": "instance",
+       "Tags": [
+        {
+         "Key": "Name",
+         "Value": "PmoDashboardStack/LaunchTemplate"
+        }
+       ]
+      },
+      {
+       "ResourceType": "volume",
+       "Tags": [
+        {
+         "Key": "Name",
+         "Value": "PmoDashboardStack/LaunchTemplate"
+        }
+       ]
+      }
+     ],
+     "UserData": {
+      "Fn::Base64": {
+       "Fn::Join": [
+        "",
+        [
+         "#!/bin/bash\n#!/bin/bash\nset -e\nexec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n\n# Update system\napt-get update\nDEBIAN_FRONTEND=noninteractive apt-get upgrade -y\n\n# Install MongoDB\nwget -qO - https://www.mongodb.org/static/pgp/server-7.0.asc | apt-key add -\necho \"deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse\" | tee /etc/apt/sources.list.d/mongodb-org-7.0.list\napt-get update\napt-get install -y mongodb-org\n\n# Configure MongoDB\nsystemctl start mongod\nsystemctl enable mongod\n\n# Wait for MongoDB to start\nsleep 10\n\n# Create MongoDB user\nmongosh <<EOF\nuse pmo_db\ndb.createUser({\n  user: \"pmo_admin\",\n  pwd: \"%^ykyNmXNXCi9Qd5gQD8dT!7\",\n  roles: [{ role: \"readWrite\", db: \"pmo_db\" }]\n})\nexit\nEOF\n\n# Install Node.js 18.x\ncurl -fsSL https://deb.nodesource.com/setup_18.x | bash -\napt-get install -y nodejs git\n\n# Install PM2 globally\nnpm install -g pm2\n\n# Create application directory\nmkdir -p /opt/pmo-dashboard\ncd /opt/pmo-dashboard\n\n# Clone or download application (placeholder - update with your repo)\n# git clone https://github.com/your-repo/pmo-dashboard.git .\n# For now, create placeholder structure\nmkdir -p server client uploads project-documents logs\n\n# Install dependencies (when you have the code)\n# npm install\n# cd client && npm install && npm run build && cd ..\n\n# Create .env file\ncat > /opt/pmo-dashboard/.env <<ENVEOF\nMONGODB_URI=mongodb://pmo_admin:D0nc08A$hU2X7KLBIZrXUPOR@localhost:27017/pmo_db\nPORT=5000\nJWT_SECRET=5Orgxo&b%52yZ8z9k1wmP&KJw9FE$5@x\nNODE_ENV=production\nENVEOF\n\nchmod 600 /opt/pmo-dashboard/.env\n\n# Create PM2 ecosystem file\ncat > /opt/pmo-dashboard/ecosystem.config.js <<PMEOF\nmodule.exports = {\n  apps: [{\n    name: \"pmo-dashboard\",\n    script: \"server/index.js\",\n    cwd: \"/opt/pmo-dashboard\",\n    instances: 1,\n    autorestart: true,\n    watch: false,\n    max_memory_restart: \"500M\",\n    env: {\n      NODE_ENV: \"production\",\n      PORT: 5000\n    },\n    error_file: \"/opt/pmo-dashboard/logs/err.log\",\n    out_file: \"/opt/pmo-dashboard/logs/out.log\",\n    log_file: \"/opt/pmo-dashboard/logs/combined.log\",\n    time: true\n  }]\n};\nPMEOF\n\n# Start application with PM2 (when code is deployed)\n# pm2 start ecosystem.config.js\n# pm2 save\n# pm2 startup systemd -u root --hp /root\n\n# Install and configure Nginx\napt-get install -y nginx\n\ncat > /etc/nginx/sites-available/pmo-dashboard <<NGINXEOF\nserver {\n    listen 80;\n    server_name _;\n    client_max_body_size 50M;\n\n    location /health {\n        access_log off;\n        return 200 \"healthy\\n\";\n        add_header Content-Type text/plain;\n    }\n\n    location / {\n        proxy_pass http://localhost:5000;\n        proxy_http_version 1.1;\n        proxy_set_header Upgrade \\$http_upgrade;\n        proxy_set_header Connection \"upgrade\";\n        proxy_set_header Host \\$host;\n        proxy_set_header X-Real-IP \\$remote_addr;\n        proxy_set_header X-Forwarded-For \\$proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto \\$scheme;\n        proxy_cache_bypass \\$http_upgrade;\n    }\n}\nNGINXEOF\n\nln -sf /etc/nginx/sites-available/pmo-dashboard /etc/nginx/sites-enabled/\nrm -f /etc/nginx/sites-enabled/default\nnginx -t && systemctl restart nginx\nsystemctl enable nginx\n\n# Create backup script\ncat > /root/backup-to-s3.sh <<BACKUPEOF\n#!/bin/bash\nDATE=\\$(date +%Y%m%d_%H%M%S)\nBACKUP_DIR=\"/tmp/mongodb-backup-\\$DATE\"\nmongodump --uri=\"mongodb://pmo_admin:bZON71mSE!Wxd5ENW0Zg$Fx5@localhost:27017/pmo_db\" --out=\"\\$BACKUP_DIR\"\ntar -czf /tmp/backup-\\$DATE.tar.gz -C /tmp mongodb-backup-\\$DATE\naws s3 cp /tmp/backup-\\$DATE.tar.gz s3://",
+         {
+          "Ref": "PmoDashboardBackupBucket90FAF853"
+         },
+         "/mongodb/\nrm -rf \\$BACKUP_DIR /tmp/backup-\\$DATE.tar.gz\necho \"Backup completed: \\$DATE\"\nBACKUPEOF\n\nchmod +x /root/backup-to-s3.sh\n\n# Schedule daily backups\n(crontab -l 2>/dev/null; echo \"0 2 * * * /root/backup-to-s3.sh\") | crontab -\n\n# Install CloudWatch agent\nwget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb\ndpkg -i -E ./amazon-cloudwatch-agent.deb\n\n# Signal completion\necho \"User data script completed successfully\" > /var/log/user-data-complete.log"
+        ]
+       ]
+      }
+     }
+    },
+    "TagSpecifications": [
+     {
+      "ResourceType": "launch-template",
+      "Tags": [
+       {
+        "Key": "Name",
+        "Value": "PmoDashboardStack/LaunchTemplate"
+       }
+      ]
+     }
+    ]
+   },
+   "DependsOn": [
+    "InstanceRoleDefaultPolicy1531605C",
+    "InstanceRole3CCE2F1D"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/LaunchTemplate/Resource"
+   }
+  },
+  "ApplicationLoadBalancerFD56DEE1": {
+   "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+   "Properties": {
+    "LoadBalancerAttributes": [
+     {
+      "Key": "deletion_protection.enabled",
+      "Value": "false"
+     }
+    ],
+    "Scheme": "internet-facing",
+    "SecurityGroups": [
+     {
+      "Fn::GetAtt": [
+       "AlbSecurityGroup86A59E99",
+       "GroupId"
+      ]
+     }
+    ],
+    "Subnets": [
+     {
+      "Ref": "PmoDashboardVpcPublicSubnet1Subnet3AC0EAC1"
+     },
+     {
+      "Ref": "PmoDashboardVpcPublicSubnet2Subnet359DA2BE"
+     }
+    ],
+    "Type": "application"
+   },
+   "DependsOn": [
+    "PmoDashboardVpcPublicSubnet1DefaultRoute909792F8",
+    "PmoDashboardVpcPublicSubnet1RouteTableAssociationE6708518",
+    "PmoDashboardVpcPublicSubnet2DefaultRoute034E91BC",
+    "PmoDashboardVpcPublicSubnet2RouteTableAssociation4E7BB260"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/ApplicationLoadBalancer/Resource"
+   }
+  },
+  "ApplicationLoadBalancerHttpListener075DDBFE": {
+   "Type": "AWS::ElasticLoadBalancingV2::Listener",
+   "Properties": {
+    "DefaultActions": [
+     {
+      "TargetGroupArn": {
+       "Ref": "TargetGroup3D7CD9B8"
+      },
+      "Type": "forward"
+     }
+    ],
+    "LoadBalancerArn": {
+     "Ref": "ApplicationLoadBalancerFD56DEE1"
+    },
+    "Port": 80,
+    "Protocol": "HTTP"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/ApplicationLoadBalancer/HttpListener/Resource"
+   }
+  },
+  "TargetGroup3D7CD9B8": {
+   "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+   "Properties": {
+    "HealthCheckIntervalSeconds": 30,
+    "HealthCheckPath": "/health",
+    "HealthCheckTimeoutSeconds": 5,
+    "HealthyThresholdCount": 2,
+    "Port": 80,
+    "Protocol": "HTTP",
+    "TargetGroupAttributes": [
+     {
+      "Key": "deregistration_delay.timeout_seconds",
+      "Value": "30"
+     },
+     {
+      "Key": "stickiness.enabled",
+      "Value": "false"
+     }
+    ],
+    "TargetType": "instance",
+    "UnhealthyThresholdCount": 3,
+    "VpcId": {
+     "Ref": "PmoDashboardVpc28ACF57C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/TargetGroup/Resource"
+   }
+  },
+  "AutoScalingGroupASG804C35BE": {
+   "Type": "AWS::AutoScaling::AutoScalingGroup",
+   "Properties": {
+    "DesiredCapacity": "1",
+    "HealthCheckGracePeriod": 300,
+    "HealthCheckType": "ELB",
+    "LaunchTemplate": {
+     "LaunchTemplateId": {
+      "Ref": "LaunchTemplate04EC5460"
+     },
+     "Version": {
+      "Fn::GetAtt": [
+       "LaunchTemplate04EC5460",
+       "LatestVersionNumber"
+      ]
+     }
+    },
+    "MaxSize": "3",
+    "MinSize": "1",
+    "TargetGroupARNs": [
+     {
+      "Ref": "TargetGroup3D7CD9B8"
+     }
+    ],
+    "VPCZoneIdentifier": [
+     {
+      "Ref": "PmoDashboardVpcPublicSubnet1Subnet3AC0EAC1"
+     },
+     {
+      "Ref": "PmoDashboardVpcPublicSubnet2Subnet359DA2BE"
+     }
+    ]
+   },
+   "UpdatePolicy": {
+    "AutoScalingRollingUpdate": {
+     "MaxBatchSize": 1,
+     "MinInstancesInService": 1,
+     "SuspendProcesses": [
+      "HealthCheck",
+      "ReplaceUnhealthy",
+      "AZRebalance",
+      "AlarmNotification",
+      "ScheduledActions",
+      "InstanceRefresh"
+     ],
+     "PauseTime": "PT5M"
+    },
+    "AutoScalingScheduledAction": {
+     "IgnoreUnmodifiedGroupSizeProperties": true
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/AutoScalingGroup/ASG"
+   }
+  },
+  "AutoScalingGroupScalingPolicyCpuScalingD20BF8F2": {
+   "Type": "AWS::AutoScaling::ScalingPolicy",
+   "Properties": {
+    "AutoScalingGroupName": {
+     "Ref": "AutoScalingGroupASG804C35BE"
+    },
+    "Cooldown": "300",
+    "PolicyType": "TargetTrackingScaling",
+    "TargetTrackingConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ASGAverageCPUUtilization"
+     },
+     "TargetValue": 70
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/AutoScalingGroup/ScalingPolicyCpuScaling/Resource"
+   }
+  },
+  "AutoScalingGroupScalingPolicyRequestScalingCC814ED8": {
+   "Type": "AWS::AutoScaling::ScalingPolicy",
+   "Properties": {
+    "AutoScalingGroupName": {
+     "Ref": "AutoScalingGroupASG804C35BE"
+    },
+    "PolicyType": "TargetTrackingScaling",
+    "TargetTrackingConfiguration": {
+     "PredefinedMetricSpecification": {
+      "PredefinedMetricType": "ALBRequestCountPerTarget",
+      "ResourceLabel": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           1,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           2,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::GetAtt": [
+           "TargetGroup3D7CD9B8",
+           "TargetGroupFullName"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "TargetValue": 1000
+    }
+   },
+   "DependsOn": [
+    "ApplicationLoadBalancerHttpListener075DDBFE"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/AutoScalingGroup/ScalingPolicyRequestScaling/Resource"
+   }
+  },
+  "AlarmTopicD01E77F9": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "PMO Dashboard Alarms"
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/AlarmTopic/Resource"
+   }
+  },
+  "HighCpuAlarm40723000": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmDescription": "Alert when CPU exceeds 80%",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "DatapointsToAlarm": 2,
+    "Dimensions": [
+     {
+      "Name": "AutoScalingGroupName",
+      "Value": {
+       "Ref": "AutoScalingGroupASG804C35BE"
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "CPUUtilization",
+    "Namespace": "AWS/EC2",
+    "Period": 300,
+    "Statistic": "Average",
+    "Threshold": 80
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/HighCpuAlarm/Resource"
+   }
+  },
+  "UnhealthyHostAlarmA5C0898D": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "AlarmTopicD01E77F9"
+     }
+    ],
+    "AlarmDescription": "Alert when instances are unhealthy",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "LoadBalancer",
+      "Value": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Fn::Select": [
+           1,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           2,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         },
+         "/",
+         {
+          "Fn::Select": [
+           3,
+           {
+            "Fn::Split": [
+             "/",
+             {
+              "Ref": "ApplicationLoadBalancerHttpListener075DDBFE"
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     {
+      "Name": "TargetGroup",
+      "Value": {
+       "Fn::GetAtt": [
+        "TargetGroup3D7CD9B8",
+        "TargetGroupFullName"
+       ]
+      }
+     }
+    ],
+    "EvaluationPeriods": 2,
+    "MetricName": "UnHealthyHostCount",
+    "Namespace": "AWS/ApplicationELB",
+    "Period": 300,
+    "Statistic": "Average",
+    "Threshold": 1
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/UnhealthyHostAlarm/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/31S22rjMBD9lr4r2tabH3DyUAKFmtj0dRmPJ840smQ0o4Ri/O9L7Gycsuw+zbmMOHNAmc3Wa/v8BBdZYXNaOa7tUCrgycBFfg2EmR0+ejTbg/8otqZItWMsU+1Jr9qC9iEpVVA7WvRFy0UCMigHf1++gp1Xip70FZQu8HWLubFcFfDYkVdTEqbI+vUaQ+qngP8KO99GEjFvkDweK+p6B3Pgd2U08tMOm4SnucSMRsPQ2WEf5i7TLIJjnO5b0M6LgkcqYjiwo9GQA1FGF6CpwYFH9u05s0Pe945xav8WoNlMHsXpnkf+uMei5G87f/CDX0FsSe/tH+hoIGkQBMe+tUOeNJQzuW//pc3Pqwh4Yt/erKXoN2E04sUOVeh5+hYTGA26kJoLKB7tkDuI3RR0BeNo9iQhRSSzTaKhW+jB/8MqYjhzQ3EDQiYXIS0VWvbt9c170j7paHxoyH7Kj3O2ti8v9vnpU5hXMXnljux+nr8B0Nt1rOMCAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "PmoDashboardStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "LoadBalancerDNS": {
+   "Description": "Application Load Balancer DNS",
+   "Value": {
+    "Fn::GetAtt": [
+     "ApplicationLoadBalancerFD56DEE1",
+     "DNSName"
+    ]
+   },
+   "Export": {
+    "Name": "PmoDashboard-ALB-DNS"
+   }
+  },
+  "BackupBucketName": {
+   "Description": "S3 Bucket for backups",
+   "Value": {
+    "Ref": "PmoDashboardBackupBucket90FAF853"
+   },
+   "Export": {
+    "Name": "PmoDashboard-Backup-Bucket"
+   }
+  },
+  "ApplicationURL": {
+   "Description": "Application URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "http://",
+      {
+       "Fn::GetAtt": [
+        "ApplicationLoadBalancerFD56DEE1",
+        "DNSName"
+       ]
+      }
+     ]
+    ]
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
