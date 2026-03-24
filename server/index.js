@@ -805,6 +805,14 @@ app.delete('/api/roles/:id', authenticate, requireAdmin, async (req, res) => {
   }
 });
 
+// Serve static files from React build
+app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
+
+// Catch-all route to serve React app for client-side routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
