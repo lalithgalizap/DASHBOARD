@@ -1,31 +1,16 @@
 {
   "version": "52.0.0",
   "files": {
-    "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200": {
-      "displayName": "PmoDashboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider Code",
-      "source": {
-        "path": "asset.7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200",
-        "packaging": "zip"
-      },
-      "destinations": {
-        "148617059060-us-east-1-87cc9f85": {
-          "bucketName": "cdk-hnb659fds-assets-148617059060-us-east-1",
-          "objectKey": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::148617059060:role/cdk-hnb659fds-file-publishing-role-148617059060-us-east-1"
-        }
-      }
-    },
-    "ff52e7640b9125d2b35bca23aeedd831872983a57d69670de617b45d5836f791": {
+    "c4d9554645b248c9d049fcb2d281b5c33e0bd4b11f824c825b80dbb514d7a87d": {
       "displayName": "PmoDashboardStack Template",
       "source": {
         "path": "PmoDashboardStack.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "148617059060-us-east-1-5fd66e3b": {
+        "148617059060-us-east-1-d96f3cfb": {
           "bucketName": "cdk-hnb659fds-assets-148617059060-us-east-1",
-          "objectKey": "ff52e7640b9125d2b35bca23aeedd831872983a57d69670de617b45d5836f791.json",
+          "objectKey": "c4d9554645b248c9d049fcb2d281b5c33e0bd4b11f824c825b80dbb514d7a87d.json",
           "region": "us-east-1",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::148617059060:role/cdk-hnb659fds-file-publishing-role-148617059060-us-east-1"
         }

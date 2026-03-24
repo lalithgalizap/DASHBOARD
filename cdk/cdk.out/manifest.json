@@ -18,12 +18,13 @@
         "tags": {
           "Application": "PMO-Dashboard",
           "Environment": "Production",
-          "ManagedBy": "AWS-CDK"
+          "ManagedBy": "AWS-CDK",
+          "UserCapacity": "20-users"
         },
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::148617059060:role/cdk-hnb659fds-deploy-role-148617059060-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::148617059060:role/cdk-hnb659fds-cfn-exec-role-148617059060-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-148617059060-us-east-1/ff52e7640b9125d2b35bca23aeedd831872983a57d69670de617b45d5836f791.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-148617059060-us-east-1/c4d9554645b248c9d049fcb2d281b5c33e0bd4b11f824c825b80dbb514d7a87d.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
