@@ -40,8 +40,10 @@ async function setupDatabase() {
     // Create permissions
     console.log('Creating permissions...');
     const permissions = await Permission.insertMany([
+      { permission_name: 'view_dashboard', description: 'Can view dashboard' },
       { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
       { permission_name: 'view_projects', description: 'Can view projects' },
+      { permission_name: 'view_updates', description: 'Can view weekly updates' },
       { permission_name: 'manage_updates', description: 'Can create and edit weekly updates' },
       { permission_name: 'manage_users', description: 'Can create, edit, and delete users' },
       { permission_name: 'manage_import', description: 'Can import data from Excel files' }
