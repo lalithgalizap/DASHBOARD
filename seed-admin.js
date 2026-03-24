@@ -18,10 +18,8 @@ const userSchema = new mongoose.Schema({
 });
 
 const permissionSchema = new mongoose.Schema({
-  name: String,
-  description: String,
-  resource: String,
-  action: String
+  permission_name: { type: String, required: true, unique: true },
+  description: String
 });
 
 const Role = mongoose.model('Role', roleSchema);
@@ -35,11 +33,11 @@ async function seedAdmin() {
 
     // Create permissions
     const permissions = [
-      { name: 'Manage Projects', resource: 'projects', action: 'manage' },
-      { name: 'View Projects', resource: 'projects', action: 'view' },
-      { name: 'Manage Updates', resource: 'updates', action: 'manage' },
-      { name: 'Manage Users', resource: 'users', action: 'manage' },
-      { name: 'Manage Import', resource: 'import', action: 'manage' }
+      { permission_name: 'Manage Projects', description: 'Can create, edit, and delete projects' },
+      { permission_name: 'View Projects', description: 'Can view projects' },
+      { permission_name: 'Manage Updates', description: 'Can create and edit weekly updates' },
+      { permission_name: 'Manage Users', description: 'Can create, edit, and delete users' },
+      { permission_name: 'Manage Import', description: 'Can import data from Excel files' }
     ];
 
     await Permission.deleteMany({});
