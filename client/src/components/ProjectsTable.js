@@ -29,19 +29,25 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
     return null;
   };
   
-  // Extract unique clients from all projects (not filtered)
+  // Extract unique clients from all projects (not filtered, case-insensitive)
   const getUniqueClients = () => {
-    const clientsSet = new Set();
+    const clientsMap = new Map();
     const projectsToUse = allProjects || projects;
     projectsToUse.forEach(project => {
       if (project.clients) {
         const projectClients = project.clients.split(',').map(c => c.trim());
         projectClients.forEach(client => {
-          if (client) clientsSet.add(client);
+          if (client) {
+            const lowerClient = client.toLowerCase();
+            // Store the first occurrence's original casing
+            if (!clientsMap.has(lowerClient)) {
+              clientsMap.set(lowerClient, client);
+            }
+          }
         });
       }
     });
-    return Array.from(clientsSet).sort();
+    return Array.from(clientsMap.values()).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   };
   
   const uniqueClients = getUniqueClients();

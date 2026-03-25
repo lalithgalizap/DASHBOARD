@@ -196,12 +196,12 @@ app.get('/api/metrics', async (req, res) => {
     // Count active projects (status = 'On Track')
     const activeProjects = projects.filter(p => p.status === 'On Track').length;
     
-    // Count unique clients across all projects
+    // Count unique clients across all projects (case-insensitive)
     const clientsSet = new Set();
     projects.forEach(project => {
       if (project.clients) {
-        // Split by comma and trim whitespace
-        const projectClients = project.clients.split(',').map(c => c.trim());
+        // Split by comma, trim whitespace, and normalize to lowercase
+        const projectClients = project.clients.split(',').map(c => c.trim().toLowerCase());
         projectClients.forEach(client => {
           if (client) clientsSet.add(client);
         });

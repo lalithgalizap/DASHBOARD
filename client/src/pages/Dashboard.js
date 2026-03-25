@@ -49,11 +49,11 @@ function Dashboard() {
       return false;
     }
     
-    // Client filter
+    // Client filter (case-insensitive)
     if (filters.client !== 'All') {
       if (!project.clients) return false;
-      const projectClients = project.clients.split(',').map(c => c.trim());
-      if (!projectClients.includes(filters.client)) {
+      const projectClients = project.clients.split(',').map(c => c.trim().toLowerCase());
+      if (!projectClients.includes(filters.client.toLowerCase())) {
         return false;
       }
     }

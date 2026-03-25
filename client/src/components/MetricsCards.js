@@ -4,11 +4,6 @@ import './MetricsCards.css';
 function MetricsCards({ metrics }) {
   const cards = [
     {
-      title: 'ACTIVE PROJECTS',
-      value: metrics.active_projects || 0,
-      color: '#3b82f6'
-    },
-    {
       title: 'CLIENTS',
       value: metrics.total_clients || 0,
       color: '#f59e0b'
