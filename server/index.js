@@ -199,11 +199,13 @@ app.get('/api/metrics', async (req, res) => {
     // Count unique clients across all projects (case-insensitive)
     const clientsSet = new Set();
     projects.forEach(project => {
-      if (project.clients) {
+      if (project.clients && project.clients.trim()) {
         // Split by comma, trim whitespace, and normalize to lowercase
-        const projectClients = project.clients.split(',').map(c => c.trim().toLowerCase());
+        const projectClients = project.clients.split(',')
+          .map(c => c.trim().toLowerCase())
+          .filter(c => c.length > 0); // Filter out empty strings
         projectClients.forEach(client => {
-          if (client) clientsSet.add(client);
+          clientsSet.add(client);
         });
       }
     });
