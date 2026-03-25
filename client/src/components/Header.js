@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Upload, LogOut, User, Shield, ChevronDown } from 'lucide-react';
+import { LogOut, User, Shield, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
@@ -28,10 +28,10 @@ function Header() {
                   Portfolio
                 </Link>
               )}
-              <a href="#" className="nav-link">Data Studio</a>
-              <a href="#" className="nav-link">Ask AI</a>
-              <a href="#" className="nav-link">Resources</a>
-              <a href="#" className="nav-link">Knowledge Base</a>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Data Studio</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Ask AI</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Resources</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Knowledge Base</button>
               {isAdmin() && (
                 <div className="nav-dropdown">
                   <span className="nav-link">

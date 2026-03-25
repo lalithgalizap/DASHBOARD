@@ -1,16 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Edit2, Trash2, ExternalLink, Plus } from 'lucide-react';
+import { Edit2, Trash2, Plus } from 'lucide-react';
 import './ProjectsTable.css';
 
 function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
   const navigate = useNavigate();
-  const priorities = ['P0', 'P1', 'P2', 'P3'];
-  const progress = ['Initial Phase', 'On-Track', 'Delayed'];
   const statuses = ['Yet to Start', 'On Track', 'On Hold', 'Delayed', 'Completed', 'Cancelled'];
   
-  const allPriorities = ['All', ...priorities];
-  const allProgress = ['All', ...progress];
   const allStatuses = ['All', ...statuses];
 
   // Get latest update for a project
@@ -63,25 +59,6 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
       'Cancelled': '#71717a'
     };
     return colors[status] || '#71717a';
-  };
-
-  const getProgressColor = (progress) => {
-    const colors = {
-      'Initial Phase': '#3b82f6',
-      'On-Track': '#10b981',
-      'Delayed': '#ef4444'
-    };
-    return colors[progress] || '#71717a';
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      'P0': '#ef4444',
-      'P1': '#f59e0b',
-      'P2': '#3b82f6',
-      'P3': '#71717a'
-    };
-    return colors[priority] || '#71717a';
   };
 
   const getStatusCounts = () => {

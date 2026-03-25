@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, AlertTriangle, CheckCircle, Users, Calendar, TrendingUp, Shield, UserCircle, XCircle, Search, GitPullRequest } from 'lucide-react';
+import { FileText, AlertTriangle, Users, Calendar, TrendingUp, Shield, UserCircle, XCircle, Search, GitPullRequest } from 'lucide-react';
 import './ProjectDocuments.css';
 
 function ProjectDocuments({ projectId, projectName }) {
@@ -12,7 +12,6 @@ function ProjectDocuments({ projectId, projectName }) {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [selectedMitigation, setSelectedMitigation] = useState(null);
   const [showMitigationModal, setShowMitigationModal] = useState(false);
-  const [showCharterDetails, setShowCharterDetails] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [selectedRisk, setSelectedRisk] = useState(null);
@@ -49,12 +48,6 @@ function ProjectDocuments({ projectId, projectName }) {
     'RAG Status': ''
   });
 
-  // Resource Management filters state
-  const [resourceManagementFilters, setResourceManagementFilters] = useState({
-    'Resource Name': '',
-    'Role': '',
-    'Status': ''
-  });
 
   // Resource Management search state
   const [resourceSearch, setResourceSearch] = useState('');
@@ -89,6 +82,7 @@ function ProjectDocuments({ projectId, projectName }) {
   useEffect(() => {
     fetchDocuments();
     fetchScope();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, projectName]);
 
   const fetchDocuments = async () => {
@@ -780,7 +774,7 @@ function ProjectDocuments({ projectId, projectName }) {
     }
 
     const charter = documents.projectCharter;
-    const { basicInfo, title } = charter;
+    const { basicInfo } = charter;
 
     // Format currency
     const formatCurrency = (val) => {
@@ -981,8 +975,6 @@ function ProjectDocuments({ projectId, projectName }) {
       'Support Team / Function', 'Planned Start Date'
     ].filter(col => allColumns.includes(col));
 
-    // Remaining columns (shown in modal)
-    const remainingColumns = allColumns.filter(col => !initialColumns.includes(col));
 
     // Get unique values for filter dropdowns (exclude the field name itself)
     const getUniqueValues = (field) => {
@@ -1614,8 +1606,6 @@ function ProjectDocuments({ projectId, projectName }) {
     // If no priority columns found, use first 8 columns
     const displayColumns = initialColumns.length > 0 ? initialColumns : allColumns.slice(0, 8);
     
-    // Remaining columns (shown in modal)
-    const remainingColumns = allColumns.filter(col => !displayColumns.includes(col));
 
     // Get unique values for filter dropdowns
     const getUniqueValues = (field) => {
@@ -1868,19 +1858,11 @@ function ProjectDocuments({ projectId, projectName }) {
       'Criticality', 'Primary Manager / Lead', 'Backup / Secondary Owner', 'Notes'
     ].filter(col => allColumns.includes(col));
 
-    // Remaining columns
-    const remainingColumns = allColumns.filter(col => !priorityColumns.includes(col));
-
     // Columns to display in table
-    const displayColumns = [...priorityColumns, ...remainingColumns];
+    const displayColumns = [...priorityColumns, ...allColumns.filter(col => !priorityColumns.includes(col))];
 
     // Calculate meaningful metrics
     const totalResources = documents.resourceManagementPlan.length;
-    const activeResources = documents.resourceManagementPlan.filter(r => r.Status === 'Active' || r.Status === 'Allocated').length;
-    const availableResources = documents.resourceManagementPlan.filter(r => r.Status === 'Available' || r.Status === 'Unassigned').length;
-    const highCriticality = documents.resourceManagementPlan.filter(r => 
-      r.Criticality === 'High' || r.Criticality === 'Critical'
-    ).length;
 
     // Filter records based on search (client-side)
     const filteredRecords = documents.resourceManagementPlan.filter(record => {
