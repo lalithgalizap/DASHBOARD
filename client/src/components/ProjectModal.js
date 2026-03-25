@@ -5,12 +5,9 @@ import './ProjectModal.css';
 function ProjectModal({ project, onClose, onSave }) {
   const [formData, setFormData] = useState({
     name: '',
-    priority: 'P2',
-    stage: 'Initial Phase',
     summary: '',
-    status: 'Active',
-    clients: '',
-    links: ''
+    status: 'Yet to Start',
+    clients: ''
   });
 
   useEffect(() => {
@@ -54,33 +51,15 @@ function ProjectModal({ project, onClose, onSave }) {
             />
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Priority</label>
-              <select name="priority" value={formData.priority} onChange={handleChange}>
-                <option value="P0">P0</option>
-                <option value="P1">P1</option>
-                <option value="P2">P2</option>
-                <option value="P3">P3</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Progress</label>
-              <select name="stage" value={formData.stage} onChange={handleChange}>
-                <option value="Initial Phase">Initial Phase</option>
-                <option value="On-Track">On-Track</option>
-                <option value="Delayed">Delayed</option>
-              </select>
-            </div>
-          </div>
-
           <div className="form-group">
             <label>Status</label>
             <select name="status" value={formData.status} onChange={handleChange}>
-              <option value="Active">Active</option>
-              <option value="On-Hold">On-Hold</option>
+              <option value="Yet to Start">Yet to Start</option>
+              <option value="On Track">On Track</option>
+              <option value="On Hold">On Hold</option>
+              <option value="Delayed">Delayed</option>
               <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
           </div>
 
@@ -103,17 +82,6 @@ function ProjectModal({ project, onClose, onSave }) {
               value={formData.clients}
               onChange={handleChange}
               placeholder="Client names"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Links</label>
-            <input
-              type="url"
-              name="links"
-              value={formData.links}
-              onChange={handleChange}
-              placeholder="https://..."
             />
           </div>
 

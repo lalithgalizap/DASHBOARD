@@ -10,9 +10,8 @@ function Dashboard() {
   const { hasPermission } = useAuth();
   const [allProjects, setAllProjects] = useState([]);
   const [metrics, setMetrics] = useState({});
+  const [weeklyUpdates, setWeeklyUpdates] = useState([]);
   const [filters, setFilters] = useState({
-    priority: 'All',
-    stage: 'All',
     status: 'All',
     client: 'All'
   });
@@ -28,12 +27,14 @@ function Dashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [projectsRes, metricsRes] = await Promise.all([
+      const [projectsRes, metricsRes, updatesRes] = await Promise.all([
         axios.get('/api/projects'),
-        axios.get('/api/metrics')
+        axios.get('/api/metrics'),
+        axios.get('/api/weekly-updates')
       ]);
       setAllProjects(projectsRes.data);
       setMetrics(metricsRes.data);
+      setWeeklyUpdates(updatesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -43,16 +44,6 @@ function Dashboard() {
 
   // Client-side filtering
   const filteredProjects = allProjects.filter(project => {
-    // Priority filter
-    if (filters.priority !== 'All' && project.priority !== filters.priority) {
-      return false;
-    }
-    
-    // Stage (Progress) filter
-    if (filters.stage !== 'All' && project.stage !== filters.stage) {
-      return false;
-    }
-    
     // Status filter
     if (filters.status !== 'All' && project.status !== filters.status) {
       return false;
@@ -150,6 +141,7 @@ function Dashboard() {
       <ProjectsTable
         projects={filteredProjects}
         allProjects={allProjects}
+        weeklyUpdates={weeklyUpdates}
         filters={filters}
         onFilterChange={setFilters}
         onEdit={handleEditProject}

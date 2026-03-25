@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Edit, Archive, ExternalLink, Upload } from 'lucide-react';
+import { Edit, Archive, Upload, ArrowLeft, X } from 'lucide-react';
 import ProjectModal from '../components/ProjectModal';
 import UpdateModal from '../components/UpdateModal';
 import DetailsModal from '../components/DetailsModal';
-import ProjectDocuments from '../components/ProjectDocuments';
 import ExcelUploadModal from '../components/ExcelUploadModal';
+import ProjectDocuments from '../components/ProjectDocuments';
 import { useAuth } from '../contexts/AuthContext';
 import './ProjectDetail.css';
 
@@ -22,6 +22,10 @@ function ProjectDetail() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [editingUpdate, setEditingUpdate] = useState(null);
+  const [showAllUpdates, setShowAllUpdates] = useState(false);
+  const [updateSearch, setUpdateSearch] = useState('');
+  const [selectedUpdateDetail, setSelectedUpdateDetail] = useState(null);
+  const [showUpdateDetailModal, setShowUpdateDetailModal] = useState(false);
 
   useEffect(() => {
     fetchProjectDetails();
@@ -145,93 +149,13 @@ function ProjectDetail() {
   return (
     <div className="project-detail-page">
       <div className="project-detail-container">
-        {/* Sidebar */}
-        <aside className="project-sidebar">
-          <button className="back-btn" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} />
-            Portfolio
-          </button>
-
-          <div className="sidebar-section">
-            <div className="sidebar-section-header">
-              <h3 className="sidebar-title">DETAILS</h3>
-              <button className="edit-details-btn" onClick={() => setShowDetailsModal(true)}>
-                <Edit size={14} />
-              </button>
-            </div>
-            <div className="sidebar-item">
-              <span className="sidebar-label">OWNER</span>
-              <span className="sidebar-value">{project.owner || 'Unset'}</span>
-            </div>
-            <div className="sidebar-item">
-              <span className="sidebar-label">VERTICAL</span>
-              <span className="sidebar-value">{project.vertical || 'Unset'}</span>
-            </div>
-            <div className="sidebar-item">
-              <span className="sidebar-label">REGION</span>
-              <span className="sidebar-value">{project.region || 'Global'}</span>
-            </div>
-            <div className="sidebar-item">
-              <span className="sidebar-label">SPONSOR</span>
-              <span className="sidebar-value">{project.sponsor || 'Unset'}</span>
-            </div>
-            <div className="sidebar-item">
-              <span className="sidebar-label">ANCHOR CUSTOMER</span>
-              <span className="sidebar-value">{project.anchor_customer || 'Unset'}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">CUSTOMER ENGAGEMENT</h3>
-            <div className="sidebar-item">
-              <span className="sidebar-value">{project.clients || 'None'}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">PRIORITY</h3>
-            <div className="sidebar-item">
-              <span className="priority-badge">{project.priority}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">STATUS</h3>
-            <div className="sidebar-item">
-              <span className="sidebar-value">{project.status}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">MODE OF ENGAGEMENT</h3>
-            <div className="sidebar-item">
-              <span className="sidebar-value">{project.mcc || 'Internal'}</span>
-            </div>
-          </div>
-
-          <div className="sidebar-section">
-            <h3 className="sidebar-title">LINKS</h3>
-            {project.links ? (
-              <a href={project.links} target="_blank" rel="noopener noreferrer" className="sidebar-link">
-                <ExternalLink size={14} />
-                Live URL
-              </a>
-            ) : (
-              <div className="sidebar-empty">-</div>
-            )}
-            <a href="#" className="sidebar-link">
-              <ExternalLink size={14} />
-              Spec Page
-            </a>
-            <a href="#" className="sidebar-link">
-              <ExternalLink size={14} />
-              Demo Video
-            </a>
-          </div>
-        </aside>
-
         {/* Main Content */}
-        <main className="project-main">
+        <main className="project-main project-main-full">
+          <button className="back-btn-inline" onClick={() => navigate('/')}>
+            <ArrowLeft size={16} />
+            Back to Portfolio
+          </button>
+          
           <div className="project-header">
             <div className="project-header-left">
               <h1>{project.name}</h1>
@@ -278,7 +202,6 @@ function ProjectDetail() {
           <section className="content-section">
             <div className="section-header">
               <h2>SUMMARY</h2>
-              <button className="edit-section-btn">Edit</button>
             </div>
             <div className="section-content">
               <p>{project.summary || 'No summary provided'}</p>
@@ -289,7 +212,6 @@ function ProjectDetail() {
           <section className="content-section">
             <div className="section-header">
               <h2>CUSTOMER ENGAGEMENT</h2>
-              <button className="edit-section-btn">Edit</button>
             </div>
             <div className="section-content">
               <p>{project.clients ? `e.g., ${project.clients}` : 'No customer engagement data'}</p>
@@ -300,47 +222,78 @@ function ProjectDetail() {
           <section className="content-section">
             <div className="section-header">
               <h2>WEEKLY UPDATES</h2>
-              <button className="add-update-btn-inline" onClick={() => {
-                setEditingUpdate(null);
-                setShowUpdateModal(true);
-              }}>+ Add Update</button>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Search updates..."
+                  value={updateSearch}
+                  onChange={(e) => setUpdateSearch(e.target.value)}
+                  className="update-search-input"
+                />
+                <button className="add-update-btn-inline" onClick={() => {
+                  setEditingUpdate(null);
+                  setShowUpdateModal(true);
+                }}>+ Add Update</button>
+              </div>
             </div>
             <div className="section-content">
               {weeklyUpdates.length === 0 ? (
                 <p className="empty-message">No weekly updates yet</p>
               ) : (
-                <div className="updates-timeline">
-                  {weeklyUpdates.map((update) => (
-                    <div key={update.id} className="timeline-item">
-                      <div className="timeline-marker"></div>
-                      <div className="timeline-content">
-                        <div className="timeline-header">
-                          <span className="timeline-date">{update.week_date}</span>
-                          {update.name && (
-                            <span className="timeline-author">by {update.name}</span>
-                          )}
+                <>
+                  <div className="updates-timeline">
+                    {(() => {
+                      const filteredUpdates = weeklyUpdates.filter(update => {
+                        if (!updateSearch) return true;
+                        const searchLower = updateSearch.toLowerCase();
+                        return (
+                          update.update_text?.toLowerCase().includes(searchLower) ||
+                          update.next_steps?.toLowerCase().includes(searchLower) ||
+                          update.blockers?.toLowerCase().includes(searchLower) ||
+                          update.name?.toLowerCase().includes(searchLower) ||
+                          update.week_date?.toLowerCase().includes(searchLower)
+                        );
+                      });
+                      const displayUpdates = showAllUpdates ? filteredUpdates : filteredUpdates.slice(0, 2);
+                      
+                      return displayUpdates.map((update) => (
+                        <div 
+                          key={update.id} 
+                          className="timeline-item clickable-update"
+                          onClick={() => {
+                            setSelectedUpdateDetail(update);
+                            setShowUpdateDetailModal(true);
+                          }}
+                        >
+                          <div className="timeline-marker"></div>
+                          <div className="timeline-content">
+                            <div className="timeline-header">
+                              <span className="timeline-date">{update.week_date}</span>
+                              {update.name && (
+                                <span className="timeline-author">by {update.name}</span>
+                              )}
+                            </div>
+                            <div className="timeline-body">
+                              {update.update_text && (
+                                <div className="timeline-section">
+                                  <strong>Update:</strong> {update.update_text.substring(0, 150)}{update.update_text.length > 150 ? '...' : ''}
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="timeline-body">
-                          {update.update_text && (
-                            <div className="timeline-section">
-                              <strong>Update:</strong> {update.update_text}
-                            </div>
-                          )}
-                          {update.next_steps && (
-                            <div className="timeline-section">
-                              <strong>Next Steps:</strong> {update.next_steps}
-                            </div>
-                          )}
-                          {update.blockers && (
-                            <div className="timeline-section">
-                              <strong>Blockers:</strong> {update.blockers}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                      ));
+                    })()}
+                  </div>
+                  {weeklyUpdates.length > 2 && !updateSearch && (
+                    <button 
+                      className="view-all-updates-btn" 
+                      onClick={() => setShowAllUpdates(!showAllUpdates)}
+                    >
+                      {showAllUpdates ? '− Show Less' : `+ View All Updates (${weeklyUpdates.length})`}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </section>
@@ -389,6 +342,76 @@ function ProjectDetail() {
           onClose={() => setShowUploadModal(false)}
           onUploadSuccess={fetchProjectDetails}
         />
+      )}
+
+      {showUpdateDetailModal && selectedUpdateDetail && (
+        <div className="modal-overlay" onClick={() => setShowUpdateDetailModal(false)}>
+          <div className="modal update-detail-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Weekly Update Details</h2>
+              <button className="close-btn" onClick={() => setShowUpdateDetailModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="update-detail-content">
+              <div className="detail-row">
+                <span className="detail-label">Week:</span>
+                <span className="detail-value">{selectedUpdateDetail.week_date}</span>
+              </div>
+              <div className="detail-row">
+                <span className="detail-label">Author:</span>
+                <span className="detail-value">{selectedUpdateDetail.name || 'N/A'}</span>
+              </div>
+              {selectedUpdateDetail.rag && selectedUpdateDetail.rag !== 'None' && (
+                <div className="detail-row">
+                  <span className="detail-label">RAG Status:</span>
+                  <span className={`rag-badge ${selectedUpdateDetail.rag.toLowerCase()}`}>
+                    {selectedUpdateDetail.rag}
+                  </span>
+                </div>
+              )}
+              {selectedUpdateDetail.momentum && selectedUpdateDetail.momentum !== 'Select' && (
+                <div className="detail-row">
+                  <span className="detail-label">Momentum:</span>
+                  <span className="detail-value">{selectedUpdateDetail.momentum}</span>
+                </div>
+              )}
+              
+              <div className="detail-section">
+                <h3>Update</h3>
+                <p>{selectedUpdateDetail.update_text || 'No update provided'}</p>
+              </div>
+              
+              {selectedUpdateDetail.next_steps && (
+                <div className="detail-section">
+                  <h3>Next Steps</h3>
+                  <p>{selectedUpdateDetail.next_steps}</p>
+                </div>
+              )}
+              
+              {selectedUpdateDetail.blockers && (
+                <div className="detail-section">
+                  <h3>Blockers</h3>
+                  <p>{selectedUpdateDetail.blockers}</p>
+                </div>
+              )}
+              
+              {selectedUpdateDetail.milestone_achieved && (
+                <div className="detail-section">
+                  <h3>Milestone Achieved</h3>
+                  <p>{selectedUpdateDetail.milestone_achieved}</p>
+                </div>
+              )}
+              
+              {selectedUpdateDetail.customer_engagement && (
+                <div className="detail-section">
+                  <h3>Customer Engagement</h3>
+                  <p>{selectedUpdateDetail.customer_engagement}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

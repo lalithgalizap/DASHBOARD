@@ -17,6 +17,11 @@ function MetricsCards({ metrics }) {
       title: 'ON TRACK',
       value: `${metrics.on_track || 0}/${metrics.total_projects || 0}`,
       color: '#10b981'
+    },
+    {
+      title: 'COMPLETED PROJECTS',
+      value: metrics.completed_projects || 0,
+      color: '#6b7280'
     }
   ];
 

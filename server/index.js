@@ -193,8 +193,8 @@ app.get('/api/metrics', async (req, res) => {
     // Calculate metrics dynamically from projects table
     const projects = await dbAdapter.getAllProjects({});
     
-    // Count active projects (status = 'Active')
-    const activeProjects = projects.filter(p => p.status === 'Active').length;
+    // Count active projects (status = 'On Track')
+    const activeProjects = projects.filter(p => p.status === 'On Track').length;
     
     // Count unique clients across all projects
     const clientsSet = new Set();
@@ -209,15 +209,19 @@ app.get('/api/metrics', async (req, res) => {
     });
     const totalClients = clientsSet.size;
     
-    // Count on-track projects based on Progress field (stage = 'On-Track')
-    const onTrackProjects = projects.filter(p => p.stage === 'On-Track').length;
+    // Count on-track projects based on status field (status = 'On Track')
+    const onTrackProjects = projects.filter(p => p.status === 'On Track').length;
     const totalProjects = projects.length;
+    
+    // Count completed projects
+    const completedProjects = projects.filter(p => p.status === 'Completed').length;
     
     const metrics = {
       active_projects: activeProjects,
       total_clients: totalClients,
       on_track: onTrackProjects,
-      total_projects: totalProjects
+      total_projects: totalProjects,
+      completed_projects: completedProjects
     };
     
     res.json(metrics);
@@ -810,7 +814,15 @@ app.use(express.static(path.join(__dirname, '..', 'client', 'build')));
 
 // Catch-all route to serve React app for client-side routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'client', 'build', 'index.html'));
+  const indexPath = path.join(__dirname, '..', 'client', 'build', 'index.html');
+  
+  // Check if build exists (for production), otherwise send helpful message
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    // In development mode, the React dev server handles routing
+    res.status(404).send('Build folder not found. Run "npm run build" in client folder for production, or use "npm run dev" for development.');
+  }
 });
 
 app.listen(PORT, () => {

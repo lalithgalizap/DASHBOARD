@@ -265,3 +265,24 @@
   letter-spacing: 0.5px;
 }
 
+/* Latest update column */
+.latest-update {
+  font-size: 13px;
+  color: #4b5563;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+.latest-update .update-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+
+.latest-update .update-author {
+  font-size: 11px;
+  color: #9ca3af;
+  font-style: italic;
+}
+

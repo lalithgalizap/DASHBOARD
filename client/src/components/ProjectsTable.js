@@ -3,15 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, ExternalLink, Plus } from 'lucide-react';
 import './ProjectsTable.css';
 
-function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
+function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
   const navigate = useNavigate();
   const priorities = ['P0', 'P1', 'P2', 'P3'];
   const progress = ['Initial Phase', 'On-Track', 'Delayed'];
-  const statuses = ['Active', 'On-Hold', 'Completed'];
+  const statuses = ['Yet to Start', 'On Track', 'On Hold', 'Delayed', 'Completed', 'Cancelled'];
   
   const allPriorities = ['All', ...priorities];
   const allProgress = ['All', ...progress];
   const allStatuses = ['All', ...statuses];
+
+  // Get latest update for a project
+  const getLatestUpdate = (projectName) => {
+    const projectUpdates = weeklyUpdates
+      .filter(update => update.project_name === projectName)
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    if (projectUpdates.length > 0) {
+      const latest = projectUpdates[0];
+      return {
+        text: latest.update_text,
+        author: latest.name
+      };
+    }
+    return null;
+  };
   
   // Extract unique clients from all projects (not filtered)
   const getUniqueClients = () => {
@@ -33,9 +49,12 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
 
   const getStatusColor = (status) => {
     const colors = {
-      'Active': '#10b981',
-      'On-Hold': '#ef4444',
-      'Completed': '#6b7280'
+      'Yet to Start': '#9ca3af',
+      'On Track': '#10b981',
+      'On Hold': '#f59e0b',
+      'Delayed': '#ef4444',
+      'Completed': '#6b7280',
+      'Cancelled': '#71717a'
     };
     return colors[status] || '#71717a';
   };
@@ -63,9 +82,12 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
     const allProjects = projects;
     return {
       all: allProjects.length,
-      active: allProjects.filter(p => p.status === 'Active').length,
-      onHold: allProjects.filter(p => p.status === 'On-Hold').length,
-      completed: allProjects.filter(p => p.status === 'Completed').length
+      yetToStart: allProjects.filter(p => p.status === 'Yet to Start').length,
+      onTrack: allProjects.filter(p => p.status === 'On Track').length,
+      onHold: allProjects.filter(p => p.status === 'On Hold').length,
+      delayed: allProjects.filter(p => p.status === 'Delayed').length,
+      completed: allProjects.filter(p => p.status === 'Completed').length,
+      cancelled: allProjects.filter(p => p.status === 'Cancelled').length
     };
   };
 
@@ -82,16 +104,28 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
             All <span className="count">{statusCounts.all}</span>
           </button>
           <button 
-            className={`filter-btn ${filters.status === 'Active' ? 'active' : ''}`}
-            onClick={() => onFilterChange({...filters, status: 'Active'})}
+            className={`filter-btn ${filters.status === 'Yet to Start' ? 'active' : ''}`}
+            onClick={() => onFilterChange({...filters, status: 'Yet to Start'})}
           >
-            Active <span className="count">{statusCounts.active}</span>
+            Yet to Start <span className="count">{statusCounts.yetToStart}</span>
           </button>
           <button 
-            className={`filter-btn ${filters.status === 'On-Hold' ? 'active' : ''}`}
-            onClick={() => onFilterChange({...filters, status: 'On-Hold'})}
+            className={`filter-btn ${filters.status === 'On Track' ? 'active' : ''}`}
+            onClick={() => onFilterChange({...filters, status: 'On Track'})}
           >
-            On-Hold <span className="count">{statusCounts.onHold}</span>
+            On Track <span className="count">{statusCounts.onTrack}</span>
+          </button>
+          <button 
+            className={`filter-btn ${filters.status === 'On Hold' ? 'active' : ''}`}
+            onClick={() => onFilterChange({...filters, status: 'On Hold'})}
+          >
+            On Hold <span className="count">{statusCounts.onHold}</span>
+          </button>
+          <button 
+            className={`filter-btn ${filters.status === 'Delayed' ? 'active' : ''}`}
+            onClick={() => onFilterChange({...filters, status: 'Delayed'})}
+          >
+            Delayed <span className="count">{statusCounts.delayed}</span>
           </button>
           <button 
             className={`filter-btn ${filters.status === 'Completed' ? 'active' : ''}`}
@@ -99,29 +133,15 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
           >
             Completed <span className="count">{statusCounts.completed}</span>
           </button>
+          <button 
+            className={`filter-btn ${filters.status === 'Cancelled' ? 'active' : ''}`}
+            onClick={() => onFilterChange({...filters, status: 'Cancelled'})}
+          >
+            Cancelled <span className="count">{statusCounts.cancelled}</span>
+          </button>
         </div>
         
         <div className="filter-dropdowns">
-          <select 
-            value={filters.priority} 
-            onChange={(e) => onFilterChange({...filters, priority: e.target.value})}
-            className="filter-select"
-          >
-            {allPriorities.map(p => (
-              <option key={p} value={p}>{p === 'All' ? 'All Priorities' : p}</option>
-            ))}
-          </select>
-
-          <select 
-            value={filters.stage} 
-            onChange={(e) => onFilterChange({...filters, stage: e.target.value})}
-            className="filter-select"
-          >
-            {allProgress.map(s => (
-              <option key={s} value={s}>{s === 'All' ? 'All Progress' : s}</option>
-            ))}
-          </select>
-
           <select 
             value={filters.status} 
             onChange={(e) => onFilterChange({...filters, status: e.target.value})}
@@ -166,11 +186,9 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
               <tr>
                 <th>PROJECT</th>
                 <th>CLIENT</th>
-                <th>PRIORITY</th>
-                <th>PROGRESS</th>
                 <th>SUMMARY</th>
                 <th>STATUS</th>
-                <th>LINKS</th>
+                <th>LATEST UPDATE</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
@@ -191,67 +209,8 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
                     <div className="project-clients">{project.clients || '-'}</div>
                   </td>
                   <td>
-                    {canManage ? (
-                      <select
-                        value={project.priority || 'P2'}
-                        onChange={(e) => onUpdateField(project.id, 'priority', e.target.value)}
-                        className="inline-select priority-select"
-                        style={{ 
-                          backgroundColor: `${getPriorityColor(project.priority)}20`, 
-                          color: getPriorityColor(project.priority),
-                          border: `1px solid ${getPriorityColor(project.priority)}40`
-                        }}
-                      >
-                        {priorities.map(p => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span
-                        className="priority-badge"
-                        style={{ 
-                          backgroundColor: `${getPriorityColor(project.priority)}20`, 
-                          color: getPriorityColor(project.priority)
-                        }}
-                      >
-                        {project.priority || 'P2'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    {canManage ? (
-                      <select
-                        value={project.stage || 'Initial Phase'}
-                        onChange={(e) => onUpdateField(project.id, 'stage', e.target.value)}
-                        className="inline-select stage-select"
-                        style={{ 
-                          backgroundColor: `${getProgressColor(project.stage)}20`, 
-                          color: getProgressColor(project.stage),
-                          border: `1px solid ${getProgressColor(project.stage)}40`
-                        }}
-                      >
-                        {progress.map(s => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span
-                        className="stage-badge"
-                        style={{ 
-                          backgroundColor: `${getProgressColor(project.stage)}20`, 
-                          color: getProgressColor(project.stage)
-                        }}
-                      >
-                        {project.stage || 'Initial Phase'}
-                      </span>
-                    )}
-                  </td>
-                  <td>
                     <div className="summary">
                       {project.summary}
-                      {project.clients && (
-                        <div className="summary-clients">Clients: {project.clients}</div>
-                      )}
                     </div>
                   </td>
                   <td>
@@ -283,11 +242,22 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
                     )}
                   </td>
                   <td>
-                    {project.links && (
-                      <a href={project.links} target="_blank" rel="noopener noreferrer" className="link-icon">
-                        <ExternalLink size={16} />
-                      </a>
-                    )}
+                    <div className="latest-update">
+                      {(() => {
+                        const latestUpdate = getLatestUpdate(project.name);
+                        if (latestUpdate) {
+                          return (
+                            <>
+                              <div className="update-text">{latestUpdate.text}</div>
+                              {latestUpdate.author && (
+                                <div className="update-author">by {latestUpdate.author}</div>
+                              )}
+                            </>
+                          );
+                        }
+                        return '-';
+                      })()}
+                    </div>
                   </td>
                   <td>
                     {canManage && (

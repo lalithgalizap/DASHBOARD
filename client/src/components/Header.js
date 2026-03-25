@@ -25,12 +25,7 @@ function Header() {
             <nav className="nav">
               {hasPermission('projects', 'view') && (
                 <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-                  Projects
-                </Link>
-              )}
-              {hasPermission('updates', 'view') && (
-                <Link to="/weekly-updates" className={`nav-link ${location.pathname === '/weekly-updates' ? 'active' : ''}`}>
-                  Weekly Updates
+                  Portfolio
                 </Link>
               )}
               <a href="#" className="nav-link">Data Studio</a>
