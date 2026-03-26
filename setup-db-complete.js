@@ -20,7 +20,7 @@ async function setupDatabase() {
     }));
 
     const Role = mongoose.model('Role', new mongoose.Schema({
-      name: String,
+      role_name: String,
       description: String,
       permissions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Permission' }]
     }));
@@ -53,7 +53,7 @@ async function setupDatabase() {
     // Create admin role
     console.log('Creating admin role...');
     const adminRole = await Role.create({
-      name: 'Admin',
+      role_name: 'Admin',
       description: 'Full system access',
       permissions: []
     });
@@ -83,7 +83,7 @@ async function setupDatabase() {
     console.log('\n=== Verification ===');
     const userWithRole = await User.findById(adminUser._id).populate('role_id');
     console.log('User:', userWithRole.username);
-    console.log('Role:', userWithRole.role_id.name);
+    console.log('Role:', userWithRole.role_id.role_name);
     
     const rolePerms = await RolePermission.find({ role_id: adminRole._id }).populate('permission_id');
     console.log('Permissions:', rolePerms.map(rp => rp.permission_id.permission_name).join(', '));
