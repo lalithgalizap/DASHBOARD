@@ -50,6 +50,9 @@
   border-bottom: 2px solid transparent;
   transition: all 0.2s ease;
   font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .nav-link:hover {

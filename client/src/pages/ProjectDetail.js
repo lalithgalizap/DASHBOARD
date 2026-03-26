@@ -154,7 +154,7 @@ function ProjectDetail() {
         <main className="project-main project-main-full">
           <button className="back-btn-inline" onClick={() => navigate('/')}>
             <ArrowLeft size={16} />
-            Back to Portfolio
+            Back to Projects
           </button>
           
           <div className="project-header">

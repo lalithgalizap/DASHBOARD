@@ -25,13 +25,12 @@ function Header() {
             <nav className="nav">
               {hasPermission('projects', 'view') && (
                 <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-                  Portfolio
+                  Projects
                 </Link>
               )}
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Data Studio</button>
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Ask AI</button>
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Resources</button>
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Knowledge Base</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Portfolio</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Performance</button>
+              <button className="nav-link" onClick={(e) => e.preventDefault()}>Staff Augmentation</button>
               {isAdmin() && (
                 <div className="nav-dropdown">
                   <span className="nav-link">

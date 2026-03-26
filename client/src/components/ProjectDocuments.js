@@ -1726,18 +1726,6 @@ function ProjectDocuments({ projectId, projectName }) {
               {documents.riskRegister.filter(r => r['Risk Priority'] === 'High' || r['Risk Priority'] === 'Critical').length}
             </div>
           </div>
-          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
-            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Open</div>
-            <div style={{fontSize: '28px', fontWeight: '600', color: '#f59e0b'}}>
-              {documents.riskRegister.filter(r => r['Status'] === 'Open' || r['Status'] === 'Active').length}
-            </div>
-          </div>
-          <div style={{flex: 1, backgroundColor: 'white', border: '1px solid #e5e7eb', padding: '16px 20px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)'}}>
-            <div style={{fontSize: '12px', fontWeight: '500', color: '#6b7280', marginBottom: '4px'}}>Mitigated</div>
-            <div style={{fontSize: '28px', fontWeight: '600', color: '#16a34a'}}>
-              {documents.riskRegister.filter(r => r['Status'] === 'Mitigated' || r['Status'] === 'Closed' || r['Mitigation Strategy']).length}
-            </div>
-          </div>
         </div>
 
         {/* Filters Section */}
