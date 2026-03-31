@@ -4,7 +4,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
-import WeeklyUpdates from './components/WeeklyUpdates';
 import ProjectDetail from './pages/ProjectDetail';
 import Login from './pages/Login';
 import UserManagement from './pages/UserManagement';
@@ -22,11 +21,6 @@ function App() {
             <Route path="/" element={
               <ProtectedRoute requirePermission resource="dashboard" action="view">
                 <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/weekly-updates" element={
-              <ProtectedRoute requirePermission resource="updates" action="view">
-                <WeeklyUpdates />
               </ProtectedRoute>
             } />
             <Route path="/project/:id" element={

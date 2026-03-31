@@ -10,7 +10,6 @@ function Dashboard() {
   const { hasPermission } = useAuth();
   const [allProjects, setAllProjects] = useState([]);
   const [metrics, setMetrics] = useState({});
-  const [weeklyUpdates, setWeeklyUpdates] = useState([]);
   const [filters, setFilters] = useState({
     status: 'All',
     client: 'All'
@@ -27,14 +26,12 @@ function Dashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [projectsRes, metricsRes, updatesRes] = await Promise.all([
+      const [projectsRes, metricsRes] = await Promise.all([
         axios.get('/api/projects'),
-        axios.get('/api/metrics'),
-        axios.get('/api/weekly-updates')
+        axios.get('/api/metrics')
       ]);
       setAllProjects(projectsRes.data);
       setMetrics(metricsRes.data);
-      setWeeklyUpdates(updatesRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -141,7 +138,6 @@ function Dashboard() {
       <ProjectsTable
         projects={filteredProjects}
         allProjects={allProjects}
-        weeklyUpdates={weeklyUpdates}
         filters={filters}
         onFilterChange={setFilters}
         onEdit={handleEditProject}

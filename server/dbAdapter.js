@@ -206,39 +206,6 @@ class DatabaseAdapter {
     const event = await models.Event.create(data);
     return { id: event._id.toString() };
   }
-
-  // Weekly Updates
-  async getAllWeeklyUpdates(filters = {}) {
-    const query = {};
-    if (filters.week) query.week_date = filters.week;
-    if (filters.project && filters.project !== 'All Projects') query.project_name = filters.project;
-    
-    const updates = await models.WeeklyUpdate.find(query).sort({ created_at: -1 }).lean();
-    return updates.map(u => ({ ...u, id: u._id.toString() }));
-  }
-
-  async getWeeklyUpdatesByProject(projectId, filters = {}) {
-    const query = { project_id: projectId };
-    if (filters.week) query.week_date = filters.week;
-    
-    const updates = await models.WeeklyUpdate.find(query).sort({ created_at: -1 }).lean();
-    return updates.map(u => ({ ...u, id: u._id.toString() }));
-  }
-
-  async createWeeklyUpdate(data) {
-    const update = await models.WeeklyUpdate.create(data);
-    return { id: update._id.toString() };
-  }
-
-  async updateWeeklyUpdate(id, data) {
-    await models.WeeklyUpdate.findByIdAndUpdate(id, data);
-    return { changes: 1 };
-  }
-
-  async deleteWeeklyUpdate(id) {
-    await models.WeeklyUpdate.findByIdAndDelete(id);
-    return { changes: 1 };
-  }
 }
 
 module.exports = new DatabaseAdapter();

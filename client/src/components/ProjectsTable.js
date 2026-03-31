@@ -3,27 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import './ProjectsTable.css';
 
-function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
+function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
   const navigate = useNavigate();
   const statuses = ['Yet to Start', 'On Track', 'On Hold', 'Delayed', 'Completed', 'Cancelled'];
   
   const allStatuses = ['All', ...statuses];
-
-  // Get latest update for a project
-  const getLatestUpdate = (projectName) => {
-    const projectUpdates = weeklyUpdates
-      .filter(update => update.project_name === projectName)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    
-    if (projectUpdates.length > 0) {
-      const latest = projectUpdates[0];
-      return {
-        text: latest.update_text,
-        author: latest.name
-      };
-    }
-    return null;
-  };
   
   // Extract unique clients from all projects (not filtered, case-insensitive)
   const getUniqueClients = () => {
@@ -171,7 +155,6 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
                 <th>CLIENT</th>
                 <th>SUMMARY</th>
                 <th>STATUS</th>
-                <th>LATEST UPDATE</th>
                 <th>ACTIONS</th>
               </tr>
             </thead>
@@ -183,17 +166,20 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
                       <strong 
                         className="project-name-link" 
                         onClick={() => navigate(`/project/${project.id}`)}
+                        style={{ cursor: 'pointer', color: '#2563eb' }}
                       >
                         {project.name}
                       </strong>
                     </div>
                   </td>
                   <td>
-                    <div className="project-clients">{project.clients || '-'}</div>
+                    <div className="client-name">
+                      {project.clients || '-'}
+                    </div>
                   </td>
                   <td>
-                    <div className="summary">
-                      {project.summary}
+                    <div className="project-summary">
+                      {project.summary || '-'}
                     </div>
                   </td>
                   <td>
@@ -201,15 +187,14 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
                       <select
                         value={project.status || 'Active'}
                         onChange={(e) => onUpdateField(project.id, 'status', e.target.value)}
-                        className="inline-select status-select"
+                        className="status-select"
                         style={{ 
                           backgroundColor: `${getStatusColor(project.status)}20`, 
-                          color: getStatusColor(project.status),
-                          border: `1px solid ${getStatusColor(project.status)}40`
+                          color: getStatusColor(project.status)
                         }}
                       >
-                        {statuses.map(s => (
-                          <option key={s} value={s}>{s}</option>
+                        {statuses.map(status => (
+                          <option key={status} value={status}>{status}</option>
                         ))}
                       </select>
                     ) : (
@@ -223,24 +208,6 @@ function ProjectsTable({ projects, allProjects, weeklyUpdates = [], filters, onF
                         {project.status || 'Active'}
                       </span>
                     )}
-                  </td>
-                  <td>
-                    <div className="latest-update">
-                      {(() => {
-                        const latestUpdate = getLatestUpdate(project.name);
-                        if (latestUpdate) {
-                          return (
-                            <>
-                              <div className="update-text">{latestUpdate.text}</div>
-                              {latestUpdate.author && (
-                                <div className="update-author">by {latestUpdate.author}</div>
-                              )}
-                            </>
-                          );
-                        }
-                        return '-';
-                      })()}
-                    </div>
                   </td>
                   <td>
                     {canManage && (

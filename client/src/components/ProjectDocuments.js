@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FileText, AlertTriangle, Users, Calendar, TrendingUp, Shield, UserCircle, XCircle, Search, GitPullRequest } from 'lucide-react';
+import { FileText, AlertTriangle, Users, Calendar, TrendingUp, Shield, UserCircle, XCircle, Search, GitPullRequest, CalendarCheck } from 'lucide-react';
+import GovernanceCadence from './GovernanceCadence';
 import './ProjectDocuments.css';
 
 function ProjectDocuments({ projectId, projectName }) {
@@ -135,6 +136,7 @@ function ProjectDocuments({ projectId, projectName }) {
     { id: 'plan', label: 'Project Plan', icon: Calendar },
     { id: 'milestones', label: 'Milestone Tracker', icon: TrendingUp },
     { id: 'stakeholders', label: 'Stakeholder Register', icon: Users },
+    { id: 'governance', label: 'Governance & Cadences', icon: CalendarCheck },
     { id: 'raid', label: 'RAID Log', icon: AlertTriangle },
     { id: 'cadence', label: 'Risk Register', icon: Shield },
     { id: 'resource', label: 'Resource Management', icon: UserCircle },
@@ -2250,6 +2252,8 @@ function ProjectDocuments({ projectId, projectName }) {
         return renderRAIDLog();
       case 'stakeholders':
         return renderStakeholders();
+      case 'governance':
+        return <GovernanceCadence documents={documents} />;
       case 'cadence':
         return renderRiskRegister();
       case 'resource':

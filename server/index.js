@@ -133,7 +133,7 @@ app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'man
       const excelFilePath = path.join(__dirname, '..', 'project-documents', `${project.name}.xlsx`);
       if (fs.existsSync(excelFilePath)) {
         fs.unlinkSync(excelFilePath);
-        console.log(`[DELETE] Removed Excel file: ${project.name}.xlsx`);
+        // Excel file removed
       }
     }
     
@@ -175,7 +175,6 @@ app.post('/api/projects/upload-document', authenticate, requirePermission('proje
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    console.log(`[UPLOAD] Document uploaded successfully for project: ${projectName}`);
     res.json({ 
       message: 'Document uploaded successfully',
       filename: req.file.originalname,
@@ -250,43 +249,6 @@ app.post('/api/events', async (req, res) => {
   }
 });
 
-app.get('/api/weekly-updates', async (req, res) => {
-  try {
-    const { week, project } = req.query;
-    const updates = await dbAdapter.getAllWeeklyUpdates({ week, project });
-    res.json(updates);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/weekly-updates', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
-  try {
-    const result = await dbAdapter.createWeeklyUpdate(req.body);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.put('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
-  try {
-    const result = await dbAdapter.updateWeeklyUpdate(req.params.id, req.body);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.delete('/api/weekly-updates/:id', authenticate, requirePermission('updates', 'manage'), async (req, res) => {
-  try {
-    const result = await dbAdapter.deleteWeeklyUpdate(req.params.id);
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.post('/api/import/excel', authenticate, requirePermission('import', 'manage'), upload.single('file'), (req, res) => {
   try {
     const workbook = xlsx.readFile(req.file.path);
@@ -351,7 +313,6 @@ app.get('/api/projects/:id/documents', authenticate, async (req, res) => {
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      console.log(`[DOCUMENTS] No Excel file found for project: ${project.name}`);
       return res.json({
         raidLog: [],
         raidDashboard: {},
@@ -368,7 +329,6 @@ app.get('/api/projects/:id/documents', authenticate, async (req, res) => {
       });
     }
     
-    console.log(`[${new Date().toISOString()}] Reading Excel file: ${filePath}`);
     const workbook = XLSX.readFile(filePath);
     
     const documents = {
@@ -533,11 +493,33 @@ app.get('/api/projects/:id/documents', authenticate, async (req, res) => {
       documents.resourceAvailability = data.filter(item => item['Availability ID']);
     }
     
-    // Read Governance & Cadences
-    if (workbook.SheetNames.includes('Governance & Cadences')) {
-      const worksheet = workbook.Sheets['Governance & Cadences'];
+    // Read Governance & Cadences - check multiple possible sheet names
+    const governanceSheetNames = [
+      'Governance & Cadences',
+      'Governance Cadences',
+      'Governance and Cadences',
+      'Governance',
+      'Cadences'
+    ];
+    
+    let governanceSheetName = null;
+    for (const name of governanceSheetNames) {
+      if (workbook.SheetNames.includes(name)) {
+        governanceSheetName = name;
+        break;
+      }
+    }
+    
+    if (governanceSheetName) {
+      const worksheet = workbook.Sheets[governanceSheetName];
       const data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-      documents.governanceCadences = data.filter(item => item['Meeting Name'] || item['Meeting Type']);
+      
+      // Filter: Accept any row that has at least one non-empty value
+      documents.governanceCadences = data.filter(item => 
+        Object.values(item).some(value => value && value !== '')
+      );
+    } else {
+      documents.governanceCadences = [];
     }
     
     // Read Change Management Plan

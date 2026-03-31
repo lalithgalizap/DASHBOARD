@@ -4,7 +4,6 @@ const {
   ProjectScope,
   Event,
   Metric,
-  WeeklyUpdate,
   User,
   Role,
   Permission,
@@ -39,9 +38,6 @@ async function clearMongoDB() {
 
     await Metric.deleteMany({});
     console.log('✓ Cleared metrics');
-
-    await WeeklyUpdate.deleteMany({});
-    console.log('✓ Cleared weekly_updates');
 
     console.log('\n=== MongoDB Cleared Successfully ===\n');
     process.exit(0);
