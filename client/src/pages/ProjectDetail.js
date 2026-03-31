@@ -199,26 +199,6 @@ function ProjectDetail() {
             </div>
           </div>
 
-          {/* Summary Section */}
-          <section className="content-section">
-            <div className="section-header">
-              <h2>SUMMARY</h2>
-            </div>
-            <div className="section-content">
-              <p>{project.summary || 'No summary provided'}</p>
-            </div>
-          </section>
-
-          {/* Customer Engagement Section */}
-          <section className="content-section">
-            <div className="section-header">
-              <h2>CUSTOMER ENGAGEMENT</h2>
-            </div>
-            <div className="section-content">
-              <p>{project.clients ? `e.g., ${project.clients}` : 'No customer engagement data'}</p>
-            </div>
-          </section>
-
           {/* Weekly Updates Section */}
           <section className="content-section">
             <div className="section-header">
