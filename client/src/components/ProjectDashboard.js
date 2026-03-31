@@ -192,7 +192,8 @@ function ProjectDashboard({ projectId, projectName, project }) {
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
     const agedRaid = raidLog.filter(r => {
       if (!r['Date Raised']) return false;
-      const raisedDate = new Date(r['Date Raised']);
+      const raisedDate = convertExcelDateToJS(r['Date Raised']);
+      if (!raisedDate) return false;
       return raisedDate < thirtyDaysAgo && 
              r.Status && r.Status.toLowerCase() !== 'closed' && r.Status.toLowerCase() !== 'resolved';
     }).length;
