@@ -7,6 +7,7 @@ import UpdateModal from '../components/UpdateModal';
 import DetailsModal from '../components/DetailsModal';
 import ExcelUploadModal from '../components/ExcelUploadModal';
 import ProjectDocuments from '../components/ProjectDocuments';
+import ProjectDashboard from '../components/ProjectDashboard';
 import { useAuth } from '../contexts/AuthContext';
 import './ProjectDetail.css';
 
@@ -152,36 +153,13 @@ function ProjectDetail() {
       <div className="project-detail-container">
         {/* Main Content */}
         <main className="project-main project-main-full">
-          <button className="back-btn-inline" onClick={() => navigate('/')}>
-            <ArrowLeft size={16} />
-            Back to Projects
-          </button>
-          
-          <div className="project-header">
-            <div className="project-header-left">
-              <h1>{project.name}</h1>
-              <div className="project-badges">
-                <span 
-                  className="badge stage-badge"
-                  style={{ 
-                    backgroundColor: `${getStageColor(project.stage)}20`, 
-                    color: getStageColor(project.stage) 
-                  }}
-                >
-                  {project.stage}
-                </span>
-                <span 
-                  className="badge status-badge"
-                  style={{ 
-                    backgroundColor: `${getStatusColor(project.status)}20`, 
-                    color: getStatusColor(project.status) 
-                  }}
-                >
-                  {project.status}
-                </span>
-              </div>
-            </div>
-            <div className="project-header-actions">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <button className="back-btn-inline" onClick={() => navigate('/')}>
+              <ArrowLeft size={16} />
+              Back to Projects
+            </button>
+            
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               {(isAdmin() || hasPermission('projects', 'manage')) && (
                 <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
                   <Upload size={16} />
@@ -198,6 +176,13 @@ function ProjectDetail() {
               </button>
             </div>
           </div>
+
+          {/* Project Dashboard */}
+          <ProjectDashboard 
+            projectId={id} 
+            projectName={project.name} 
+            project={project}
+          />
 
           {/* Weekly Updates Section */}
           <section className="content-section">

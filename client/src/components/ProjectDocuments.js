@@ -787,10 +787,25 @@ function ProjectDocuments({ projectId, projectName }) {
     // Format date
     const formatDate = (val) => {
       if (!val) return 'N/A';
+      
+      // Handle Excel serial date numbers
+      if (typeof val === 'number' && val > 40000 && val < 50000) {
+        const utcDate = new Date(Date.UTC(1899, 11, 30) + val * 86400 * 1000);
+        const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const year = utcDate.getUTCFullYear();
+        return `${month}/${day}/${year}`;
+      }
+      
+      // Handle ISO date strings
       if (typeof val === 'string' && val.includes('-')) {
         const date = new Date(val);
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        const year = date.getUTCFullYear();
+        return `${month}/${day}/${year}`;
       }
+      
       return val;
     };
 
@@ -1017,8 +1032,12 @@ function ProjectDocuments({ projectId, projectName }) {
       if (value === '' || value === null || value === undefined) return '-';
       if (column === '% Complete') return `${(value * 100).toFixed(0)}%`;
       if (typeof value === 'number' && value > 40000 && value < 50000) {
-        const date = new Date((value - 25569) * 86400 * 1000);
-        return date.toLocaleDateString();
+        // Excel date serial number to UTC date (no timezone shift)
+        const utcDate = new Date(Date.UTC(1899, 11, 30) + value * 86400 * 1000);
+        const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const year = utcDate.getUTCFullYear();
+        return `${month}/${day}/${year}`;
       }
       return value;
     };
@@ -1256,8 +1275,12 @@ function ProjectDocuments({ projectId, projectName }) {
       if (value === '' || value === null || value === undefined) return '-';
       if (column === '% Complete') return `${(value * 100).toFixed(0)}%`;
       if (typeof value === 'number' && value > 40000 && value < 50000) {
-        const date = new Date((value - 25569) * 86400 * 1000);
-        return date.toLocaleDateString();
+        // Excel date serial number to UTC date (no timezone shift)
+        const utcDate = new Date(Date.UTC(1899, 11, 30) + value * 86400 * 1000);
+        const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(utcDate.getUTCDate()).padStart(2, '0');
+        const year = utcDate.getUTCFullYear();
+        return `${month}/${day}/${year}`;
       }
       return value;
     };
