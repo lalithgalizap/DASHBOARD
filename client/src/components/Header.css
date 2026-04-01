@@ -109,6 +109,23 @@
   background: rgba(239, 68, 68, 0.2);
 }
 
+.change-password-btn {
+  background: rgba(59, 130, 246, 0.1);
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  color: #3b82f6;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.change-password-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+}
+
 .login-link {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
   color: white;

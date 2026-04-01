@@ -633,6 +633,46 @@ app.get('/api/auth/me', authenticate, async (req, res) => {
   }
 });
 
+// Change password (for non-admin users)
+app.post('/api/auth/change-password', authenticate, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'Current password and new password are required' });
+  }
+
+  try {
+    // Get current user
+    const user = await dbAdapter.getUserById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if user is admin - admins should use user management instead
+    const adminRole = await dbAdapter.getRoleByName('Admin');
+    if (adminRole && user.role_id === adminRole.id) {
+      return res.status(403).json({ error: 'Admin users cannot change password here. Use User Management.' });
+    }
+
+    // Verify current password
+    const validPassword = bcrypt.compareSync(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedPassword = bcrypt.hashSync(newPassword, 10);
+    
+    // Update password
+    await dbAdapter.updateUser(user.id, { password: hashedPassword });
+    
+    res.json({ message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Error changing password:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ========== USER MANAGEMENT (Admin only) ==========
 
 // Get all users

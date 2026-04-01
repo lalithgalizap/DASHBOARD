@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LogOut, User, Shield, ChevronDown } from 'lucide-react';
+import { LogOut, User, Shield, ChevronDown, Key } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import ChangePasswordModal from './ChangePasswordModal';
 import './Header.css';
 
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, user, logout, hasPermission, isAdmin } = useAuth();
+  const [showChangePassword, setShowChangePassword] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +60,15 @@ function Header() {
             <div className="user-section">
               <span className="user-name">{user?.username}</span>
               <span className="user-role">{user?.role}</span>
+              {!isAdmin() && (
+                <button 
+                  className="change-password-btn" 
+                  onClick={() => setShowChangePassword(true)}
+                  title="Change Password"
+                >
+                  <Key size={16} />
+                </button>
+              )}
               <button className="logout-btn" onClick={handleLogout} title="Logout">
                 <LogOut size={18} />
               </button>
@@ -71,6 +82,12 @@ function Header() {
           )}
         </div>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal
+          onClose={() => setShowChangePassword(false)}
+        />
+      )}
     </header>
   );
 }

@@ -147,8 +147,6 @@ const UserManagement = () => {
               <th>Username</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Status</th>
-              <th>Last Login</th>
               <th>Created</th>
               <th>Actions</th>
             </tr>
@@ -163,12 +161,6 @@ const UserManagement = () => {
                     {user.role_name || 'No Role'}
                   </span>
                 </td>
-                <td>
-                  <span className={`status-badge ${user.is_active ? 'active' : 'inactive'}`}>
-                    {user.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td>{user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}</td>
                 <td>{new Date(user.created_at).toLocaleDateString()}</td>
                 <td className="actions">
                   <button
