@@ -668,13 +668,20 @@ app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
 // Update user
 app.put('/api/users/:id', authenticate, requireAdmin, async (req, res) => {
   try {
-    const { username, email, password, role_id } = req.body;
+    const { username, email, password, role_id, is_active } = req.body;
     
     const updateData = {};
     if (username) updateData.username = username;
     if (email) updateData.email = email;
-    if (password) updateData.password = password;
-    if (role_id) updateData.role_id = role_id;
+    if (password) {
+      updateData.password = bcrypt.hashSync(password, 10);
+    }
+    if (role_id !== undefined) {
+      updateData.role_id = role_id || null;
+    }
+    if (is_active !== undefined) {
+      updateData.is_active = is_active;
+    }
     
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
@@ -713,7 +720,11 @@ app.get('/api/roles', authenticate, requireAdmin, async (req, res) => {
     const rolesWithPermissions = await Promise.all(
       roles.map(async (role) => {
         const permissions = await dbAdapter.getRolePermissions(role.id);
-        return { ...role, permissions };
+        return { 
+          ...role, 
+          name: role.role_name,
+          permissions 
+        };
       })
     );
     res.json(rolesWithPermissions);
@@ -789,204 +800,6 @@ app.delete('/api/roles/:id', authenticate, requireAdmin, async (req, res) => {
     const result = await dbAdapter.deleteRole(req.params.id);
     res.json({ changes: result.changes, message: 'Role deleted successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ========== PORTFOLIO DASHBOARD ENDPOINT ==========
-
-// Get portfolio-wide metrics aggregated from all project Excel files
-app.get('/api/portfolio', authenticate, async (req, res) => {
-  try {
-    // Get all projects from database
-    const projects = await dbAdapter.getAllProjects();
-    const activeProjects = projects.filter(p => p.status !== 'Completed' && p.status !== 'Cancelled');
-    
-    // Initialize portfolio metrics
-    const portfolioMetrics = {
-      totalActiveProjects: activeProjects.length,
-      projectsByRAG: { green: 0, amber: 0, red: 0 },
-      projectsUpdatedThisWeek: 0,
-      projectsMissingWeeklyUpdate: 0,
-      plannedVsActualProgress: 0,
-      overdueMilestonesTotal: 0,
-      projectsWithOverdueMilestones: 0,
-      upcomingMilestones14Days: 0,
-      openCriticalRisks: 0,
-      openCriticalIssues: 0,
-      openEscalations: 0,
-      lastUpdated: new Date().toISOString(),
-      projects: []
-    };
-    
-    // Calculate date 7 days ago for "updated this week" calculation
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    // Calculate date 14 days from now for upcoming milestones
-    const fourteenDaysFromNow = new Date();
-    fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
-    
-    // Process each project's Excel file
-    for (const project of activeProjects) {
-      const projectMetric = {
-        id: project.id,
-        name: project.name,
-        percentComplete: 0,
-        ragStatus: project.status || 'Green',
-        lastUpdated: project.updated_at || project.created_at,
-        overdueMilestones: 0,
-        criticalRisks: 0,
-        nextMilestone: null
-      };
-      
-      // Check if project was updated in last 7 days
-      const projectLastUpdated = new Date(projectMetric.lastUpdated);
-      if (projectLastUpdated >= sevenDaysAgo) {
-        portfolioMetrics.projectsUpdatedThisWeek++;
-      } else {
-        portfolioMetrics.projectsMissingWeeklyUpdate++;
-      }
-      
-      // Try to read project Excel file
-      const excelFilePath = path.join(__dirname, '..', 'project-documents', `${project.name}.xlsx`);
-      
-      if (fs.existsSync(excelFilePath)) {
-        try {
-          const workbook = XLSX.readFile(excelFilePath);
-          
-          // Read Project Cover Sheet for % complete and RAG
-          if (workbook.SheetNames.includes('Project Cover Sheet')) {
-            const worksheet = workbook.Sheets['Project Cover Sheet'];
-            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
-            
-            // Helper to get cell value
-            const getCell = (row, col) => {
-              if (row < rawData.length && col < rawData[row].length) {
-                return rawData[row][col];
-              }
-              return '';
-            };
-            
-            // Extract % complete (assuming it's in the cover sheet)
-            // This is a placeholder - actual location may vary
-            const percentComplete = getCell(15, 2); // Adjust row/col based on actual Excel layout
-            if (percentComplete) {
-              projectMetric.percentComplete = parseInt(percentComplete) || 0;
-            }
-          }
-          
-          // Read Milestone Tracker for overdue and upcoming milestones
-          if (workbook.SheetNames.includes('Milestone Tracker')) {
-            const worksheet = workbook.Sheets['Milestone Tracker'];
-            const milestones = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-            
-            const today = new Date();
-            let nextMilestone = null;
-            let nextMilestoneDate = null;
-            
-            for (const milestone of milestones) {
-              const milestoneDate = milestone['Planned End Date'] || milestone['Planned Date'];
-              const milestoneStatus = milestone['Status'] || '';
-              
-              if (milestoneDate && milestoneStatus !== 'Complete') {
-                const mDate = new Date(milestoneDate);
-                
-                // Check if overdue
-                if (mDate < today) {
-                  projectMetric.overdueMilestones++;
-                  portfolioMetrics.overdueMilestonesTotal++;
-                }
-                
-                // Check if upcoming (within 14 days)
-                if (mDate >= today && mDate <= fourteenDaysFromNow) {
-                  portfolioMetrics.upcomingMilestones14Days++;
-                }
-                
-                // Track next milestone
-                if (mDate >= today && (!nextMilestoneDate || mDate < nextMilestoneDate)) {
-                  nextMilestoneDate = mDate;
-                  nextMilestone = milestone['Milestone / Task Name'] || milestone['Task Name'];
-                }
-              }
-            }
-            
-            projectMetric.nextMilestone = nextMilestone;
-            
-            if (projectMetric.overdueMilestones > 0) {
-              portfolioMetrics.projectsWithOverdueMilestones++;
-            }
-          }
-          
-          // Read RAID Log for critical risks and issues
-          if (workbook.SheetNames.includes('RAID Log')) {
-            const worksheet = workbook.Sheets['RAID Log'];
-            const raidItems = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-            
-            for (const item of raidItems) {
-              const type = item['Type'] || '';
-              const severity = item['Severity'] || '';
-              const status = item['Status'] || '';
-              const isEscalated = item['Escalated'] === 'Yes' || item['Escalated'] === true;
-              
-              // Count open critical risks
-              if (type.toLowerCase() === 'risk' && 
-                  (severity.toLowerCase() === 'critical' || severity.toLowerCase() === 'high') &&
-                  status.toLowerCase() !== 'closed') {
-                projectMetric.criticalRisks++;
-                portfolioMetrics.openCriticalRisks++;
-              }
-              
-              // Count open critical issues
-              if (type.toLowerCase() === 'issue' && 
-                  (severity.toLowerCase() === 'critical' || severity.toLowerCase() === 'high') &&
-                  status.toLowerCase() !== 'closed') {
-                portfolioMetrics.openCriticalIssues++;
-              }
-              
-              // Count escalations
-              if (isEscalated && status.toLowerCase() !== 'closed') {
-                portfolioMetrics.openEscalations++;
-              }
-            }
-          }
-          
-        } catch (error) {
-          // Silently skip projects with unreadable Excel files
-          console.error(`Error reading Excel for project ${project.name}:`, error.message);
-        }
-      }
-      
-      // Determine RAG status from project status
-      const status = project.status?.toLowerCase() || '';
-      if (status.includes('on track') || status.includes('active')) {
-        projectMetric.ragStatus = 'Green';
-        portfolioMetrics.projectsByRAG.green++;
-      } else if (status.includes('on hold') || status.includes('at risk')) {
-        projectMetric.ragStatus = 'Amber';
-        portfolioMetrics.projectsByRAG.amber++;
-      } else if (status.includes('delayed') || status.includes('critical')) {
-        projectMetric.ragStatus = 'Red';
-        portfolioMetrics.projectsByRAG.red++;
-      } else {
-        projectMetric.ragStatus = 'Green';
-        portfolioMetrics.projectsByRAG.green++;
-      }
-      
-      portfolioMetrics.projects.push(projectMetric);
-    }
-    
-    // Calculate planned vs actual progress (placeholder calculation)
-    // In real implementation, this would compare planned % vs actual %
-    const totalPlanned = portfolioMetrics.projects.reduce((sum, p) => sum + 100, 0);
-    const totalActual = portfolioMetrics.projects.reduce((sum, p) => sum + p.percentComplete, 0);
-    if (totalPlanned > 0) {
-      portfolioMetrics.plannedVsActualProgress = Math.round(((totalActual / totalPlanned) - 1) * 100);
-    }
-    
-    res.json(portfolioMetrics);
-  } catch (err) {
-    console.error('Portfolio metrics error:', err);
     res.status(500).json({ error: err.message });
   }
 });

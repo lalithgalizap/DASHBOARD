@@ -2,6 +2,8 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  background: #f5f7fb;
+  min-height: calc(100vh - 64px);
 }
 
 .admin-header {
@@ -15,7 +17,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  color: #ffffff;
+  color: #0f172a;
 }
 
 .admin-title h1 {
@@ -45,9 +47,9 @@
 }
 
 .btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #e5e7eb;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 10px 16px;
   font-size: 14px;
@@ -57,15 +59,16 @@
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: #dbeafe;
+  border-color: #93c5fd;
 }
 
 .btn-icon {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: #edf2f7;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
   padding: 8px;
-  color: #94a3b8;
+  color: #475569;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
@@ -74,8 +77,9 @@
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #e2e8f0;
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e3a8a;
 }
 
 .btn-icon:disabled {
@@ -89,10 +93,11 @@
 }
 
 .admin-table-container {
-  background: rgba(30, 30, 46, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 .admin-table {
@@ -101,8 +106,8 @@
 }
 
 .admin-table th {
-  background: rgba(15, 23, 42, 0.8);
-  color: #94a3b8;
+  background: #f9fafb;
+  color: #4b5563;
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
@@ -113,17 +118,17 @@
 
 .admin-table td {
   padding: 16px;
-  color: #e2e8f0;
+  color: #0f172a;
   font-size: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .admin-table tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
+  background: #f8fafc;
 }
 
 .admin-table tr.inactive td {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .admin-table .actions {
@@ -195,14 +200,15 @@
 }
 
 .modal-content {
-  background: #1e1e2e;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 32px;
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15);
 }
 
 .modal-content.modal-large {
@@ -210,7 +216,7 @@
 }
 
 .modal-content h2 {
-  color: #ffffff;
+  color: #0f172a;
   font-size: 20px;
   margin: 0 0 24px 0;
 }
@@ -221,7 +227,7 @@
 
 .form-group label {
   display: block;
-  color: #94a3b8;
+  color: #475569;
   font-size: 14px;
   margin-bottom: 8px;
 }
@@ -229,20 +235,25 @@
 .form-group input,
 .form-group select {
   width: 100%;
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
   padding: 12px 16px;
-  color: #ffffff;
+  color: #0f172a;
   font-size: 14px;
   transition: all 0.2s;
+}
+
+.form-group select option {
+  color: #0f172a;
+  background: #ffffff;
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
   border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
 .form-group.checkbox label {
@@ -250,7 +261,7 @@
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  color: #e2e8f0;
+  color: #0f172a;
 }
 
 .form-group.checkbox input {
@@ -263,7 +274,7 @@
   justify-content: flex-end;
   margin-top: 24px;
   padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid #e5e7eb;
 }
 
 .admin-loading {
@@ -296,15 +307,16 @@
 }
 
 .role-card {
-  background: rgba(30, 30, 46, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 20px;
   transition: all 0.2s;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
 }
 
 .role-card:hover {
-  border-color: rgba(99, 102, 241, 0.3);
+  border-color: #93c5fd;
   transform: translateY(-2px);
 }
 
@@ -316,7 +328,7 @@
 }
 
 .role-card-header h3 {
-  color: #ffffff;
+  color: #0f172a;
   font-size: 18px;
   margin: 0;
 }
@@ -327,13 +339,13 @@
 }
 
 .role-description {
-  color: #94a3b8;
+  color: #475569;
   font-size: 13px;
   margin: 0 0 16px 0;
 }
 
 .role-permissions h4 {
-  color: #cbd5e1;
+  color: #64748b;
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -347,8 +359,8 @@
 }
 
 .permission-tag {
-  background: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background: #eef2ff;
+  color: #4338ca;
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 11px;
@@ -356,8 +368,8 @@
 }
 
 .permission-tag.more {
-  background: rgba(148, 163, 184, 0.2);
-  color: #94a3b8;
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .form-row {
@@ -384,20 +396,20 @@
 }
 
 .resource-group {
-  background: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
 }
 
 .resource-group h4 {
-  color: #ffffff;
+  color: #0f172a;
   font-size: 14px;
   font-weight: 600;
   text-transform: capitalize;
   margin: 0 0 12px 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .permission-checkboxes {
@@ -417,7 +429,7 @@
 }
 
 .permission-checkbox:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .permission-checkbox input {
@@ -444,7 +456,7 @@
 .perm-name {
   font-size: 13px;
   font-weight: 500;
-  color: #e2e8f0;
+  color: #0f172a;
   text-transform: capitalize;
   flex-shrink: 0;
 }
