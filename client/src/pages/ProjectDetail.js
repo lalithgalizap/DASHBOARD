@@ -159,6 +159,7 @@ function ProjectDetail() {
           project={project}
           onClose={() => setShowProjectModal(false)}
           onSave={handleSaveProject}
+          isAdmin={isAdmin() === true}
         />
       )}
 
