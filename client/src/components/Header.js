@@ -28,7 +28,7 @@ function Header() {
                   Projects
                 </Link>
               )}
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Portfolio</button>
+              <Link to="/portfolio" className={`nav-link ${location.pathname === '/portfolio' ? 'active' : ''}`}>Portfolio</Link>
               <button className="nav-link" onClick={(e) => e.preventDefault()}>Performance</button>
               <button className="nav-link" onClick={(e) => e.preventDefault()}>Staff Augmentation</button>
               {isAdmin() && (
