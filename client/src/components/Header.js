@@ -21,7 +21,8 @@ function Header() {
       <div className="header-content">
         <div className="header-left">
           <div className="logo">
-            <span className="logo-text">ZapCom</span>
+            <img src="/LOGO.png" alt="Logo" style={{ height: '32px', width: 'auto' }} />
+            <span className="logo-text">PMO Dashboard</span>
           </div>
           {isAuthenticated && (
             <nav className="nav">
