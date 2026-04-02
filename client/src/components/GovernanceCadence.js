@@ -29,6 +29,20 @@ function GovernanceCadence({ documents }) {
     setShowGovernanceModal(true);
   };
 
+  // Format Excel serial date to readable date
+  const formatExcelDate = (value) => {
+    if (!value) return '-';
+    // Check if it's an Excel serial date (number > 30000, typical Excel date range)
+    if (typeof value === 'number' && value > 30000 && value < 60000) {
+      // Excel dates are days since 1899-12-30
+      const excelEpoch = new Date(1899, 11, 30);
+      const date = new Date(excelEpoch.getTime() + value * 24 * 60 * 60 * 1000);
+      return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    }
+    // If already a string date, return as-is
+    return value;
+  };
+
   // Render governance detail modal
   const renderGovernanceDetailModal = () => {
     if (!showGovernanceModal || !selectedGovernance) return null;
@@ -39,7 +53,7 @@ function GovernanceCadence({ documents }) {
           <div className="category-modal-header">
             <h3>
               <span className="category-color-indicator" style={{ backgroundColor: '#3b82f6' }} />
-              Governance Details: {selectedGovernance['Meeting Name'] || selectedGovernance['Meeting Type']}
+              Governance Details: {selectedGovernance['Forum / Meeting Name'] || selectedGovernance['Meeting Name'] || selectedGovernance['Meeting Type']}
             </h3>
             <button className="modal-close-btn" onClick={() => setShowGovernanceModal(false)}>✕</button>
           </div>
@@ -55,7 +69,7 @@ function GovernanceCadence({ documents }) {
                   border: '1px solid #e9ecef'
                 }}>
                   <label style={{fontSize: '11px', color: '#666', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px'}}>{col}</label>
-                  <span style={{fontSize: '14px', fontWeight: '500'}}>{selectedGovernance[col] || '-'}</span>
+                  <span style={{fontSize: '14px', fontWeight: '500'}}>{formatExcelDate(selectedGovernance[col])}</span>
                 </div>
               ))}
             </div>
@@ -71,7 +85,7 @@ function GovernanceCadence({ documents }) {
     : documents.governanceCadences.filter(g => {
         const searchTerm = governanceSearch.toLowerCase();
         return (
-          String(g['Meeting Name'] || '').toLowerCase().includes(searchTerm) ||
+          String(g['Forum / Meeting Name'] || g['Meeting Name'] || '').toLowerCase().includes(searchTerm) ||
           String(g['Meeting Type'] || '').toLowerCase().includes(searchTerm) ||
           String(g['Frequency'] || '').toLowerCase().includes(searchTerm) ||
           String(g['Status'] || '').toLowerCase().includes(searchTerm)
@@ -135,7 +149,7 @@ function GovernanceCadence({ documents }) {
               <span style={{fontSize: '20px'}}>📅</span>
               <div style={{minWidth: '200px'}}>
                 <div style={{fontWeight: '600', color: '#1f2937', fontSize: '14px'}}>
-                  {governance['Meeting Name'] || governance['Meeting Type'] || 'Untitled Meeting'}
+                  {governance['Forum / Meeting Name'] || governance['Meeting Name'] || governance['Meeting Type'] || 'Untitled Meeting'}
                 </div>
                 <div style={{color: '#6b7280', fontSize: '12px'}}>
                   {governance['Meeting Type'] || '-'}
