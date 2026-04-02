@@ -64,6 +64,11 @@ function ProjectDocuments({ projectId, projectName }) {
     'Mitigation Strategy': ''
   });
 
+  // Closure documents state
+  const [closureFiles, setClosureFiles] = useState([]);
+  const [closureUploading, setClosureUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+
   // Change Management filters state
   const [changeManagementFilters, setChangeManagementFilters] = useState({
     'Change ID': '',
@@ -130,6 +135,84 @@ function ProjectDocuments({ projectId, projectName }) {
       setSavingScope(false);
     }
   };
+
+  // Fetch closure documents
+  const fetchClosureFiles = async () => {
+    try {
+      const response = await axios.get(`/api/projects/${projectId}/closure-documents`);
+      setClosureFiles(response.data.files || []);
+    } catch (error) {
+      console.error('Error fetching closure files:', error);
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    setSelectedFiles(Array.from(e.target.files));
+  };
+
+  // Upload closure files
+  const handleClosureUpload = async () => {
+    if (selectedFiles.length === 0) return;
+    
+    setClosureUploading(true);
+    const formData = new FormData();
+    selectedFiles.forEach(file => formData.append('files', file));
+    
+    try {
+      await axios.post(`/api/projects/${projectId}/closure-documents`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setSelectedFiles([]);
+      fetchClosureFiles();
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Failed to upload files');
+    } finally {
+      setClosureUploading(false);
+    }
+  };
+
+  // Download closure file
+  const handleDownload = async (filename) => {
+    try {
+      const response = await axios.get(
+        `/api/projects/${projectId}/closure-documents/download/${encodeURIComponent(filename)}`,
+        { responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download file');
+    }
+  };
+
+  // Delete closure file
+  const handleDelete = async (filename) => {
+    if (!window.confirm('Are you sure you want to delete this file?')) return;
+    try {
+      await axios.delete(`/api/projects/${projectId}/closure-documents/${encodeURIComponent(filename)}`);
+      fetchClosureFiles();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      alert('Failed to delete file');
+    }
+  };
+
+  // Load closure files when tab is active
+  useEffect(() => {
+    if (activeTab === 'closure') {
+      fetchClosureFiles();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, projectId]);
 
   const tabs = [
     { id: 'charter', label: 'Project Charter', icon: FileText },
@@ -2217,9 +2300,107 @@ function ProjectDocuments({ projectId, projectName }) {
   };
 
   const renderClosure = () => {
+    const formatFileSize = (bytes) => {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-';
+      return new Date(dateString).toLocaleDateString('en-US', { 
+        month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+      });
+    };
+
     return (
       <div className="document-content">
         <h3>Project Closure</h3>
+        
+        {/* Upload Section */}
+        <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600' }}>Add Documents</h4>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              style={{ flex: 1, padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: 'white' }}
+            />
+            <button
+              onClick={handleClosureUpload}
+              disabled={closureUploading || selectedFiles.length === 0}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: closureUploading || selectedFiles.length === 0 ? '#9ca3af' : '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: closureUploading || selectedFiles.length === 0 ? 'not-allowed' : 'pointer',
+                fontWeight: '500'
+              }}
+            >
+              {closureUploading ? 'Uploading...' : 'Upload'}
+            </button>
+          </div>
+          {selectedFiles.length > 0 && (
+            <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#6b7280' }}>
+              {selectedFiles.length} file(s) selected
+            </p>
+          )}
+        </div>
+
+        {/* Uploaded Files List */}
+        {closureFiles.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600' }}>
+              Uploaded Documents ({closureFiles.length})
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {closureFiles.map((file, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleDownload(file.filename)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '20px' }}>📄</span>
+                    <div>
+                      <div style={{ fontWeight: '500', fontSize: '14px', color: '#1f2937' }}>
+                        {file.originalname || file.filename}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                        {formatFileSize(file.size)} • Uploaded {formatDate(file.uploadedAt)}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <span style={{ color: '#3b82f6', fontSize: '13px', fontWeight: '500' }}>Download</span>
+                    <span 
+                      style={{ color: '#ef4444', fontSize: '13px', fontWeight: '500' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(file.filename);
+                      }}
+                    >
+                      Delete
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="placeholder-text">Project closure documentation will be available upon project completion.</p>
         <div className="closure-checklist">
           <h4>Closure Checklist</h4>

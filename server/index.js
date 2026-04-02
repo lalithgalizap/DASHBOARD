@@ -49,6 +49,21 @@ const projectDocUpload = multer({
   }
 });
 
+// Configure multer for closure documents
+const closureDocStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '..', 'project-closure-documents', req.params.id);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+const closureDocUpload = multer({ storage: closureDocStorage });
+
 app.get('/api/projects', async (req, res) => {
   try {
     const { priority, stage, status, client } = req.query;
@@ -183,6 +198,70 @@ app.post('/api/projects/upload-document', authenticate, requirePermission('proje
   } catch (err) {
     console.error('[UPLOAD] Error:', err);
     if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get closure documents list
+app.get('/api/projects/:id/closure-documents', authenticate, async (req, res) => {
+  try {
+    const dir = path.join(__dirname, '..', 'project-closure-documents', req.params.id);
+    if (!fs.existsSync(dir)) {
+      return res.json({ files: [] });
+    }
+    const files = fs.readdirSync(dir).map(filename => {
+      const stats = fs.statSync(path.join(dir, filename));
+      return {
+        filename,
+        size: stats.size,
+        uploadedAt: stats.mtime
+      };
+    });
+    res.json({ files });
+  } catch (err) {
+    console.error('Error listing closure documents:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Upload closure documents
+app.post('/api/projects/:id/closure-documents', authenticate, requirePermission('projects', 'manage'), closureDocUpload.array('files'), async (req, res) => {
+  try {
+    res.json({ 
+      message: 'Files uploaded successfully',
+      files: req.files.map(f => ({ filename: f.filename, originalname: f.originalname, size: f.size }))
+    });
+  } catch (err) {
+    console.error('Error uploading closure documents:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Download closure document
+app.get('/api/projects/:id/closure-documents/download/:filename', authenticate, async (req, res) => {
+  try {
+    const filePath = path.join(__dirname, '..', 'project-closure-documents', req.params.id, req.params.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    res.download(filePath);
+  } catch (err) {
+    console.error('Error downloading closure document:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete closure document
+app.delete('/api/projects/:id/closure-documents/:filename', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+  try {
+    const filePath = path.join(__dirname, '..', 'project-closure-documents', req.params.id, req.params.filename);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    fs.unlinkSync(filePath);
+    res.json({ message: 'File deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting closure document:', err);
     res.status(500).json({ error: err.message });
   }
 });
