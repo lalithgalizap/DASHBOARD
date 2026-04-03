@@ -266,6 +266,36 @@ app.delete('/api/projects/:id/closure-documents/:filename', authenticate, requir
   }
 });
 
+// Get project file modification times
+app.get('/api/projects-file-status', authenticate, async (req, res) => {
+  try {
+    const projects = await dbAdapter.getAllProjects({});
+    const projectFiles = projects.map(project => {
+      const filePath = path.join(__dirname, '..', 'project-documents', `${project.name}.xlsx`);
+      if (fs.existsSync(filePath)) {
+        const stats = fs.statSync(filePath);
+        return {
+          projectId: project._id || project.id,
+          projectName: project.name,
+          lastModified: stats.mtime,
+          hasData: true
+        };
+      } else {
+        return {
+          projectId: project._id || project.id,
+          projectName: project.name,
+          lastModified: null,
+          hasData: false
+        };
+      }
+    });
+    res.json({ projects: projectFiles });
+  } catch (err) {
+    console.error('Error getting project file status:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/metrics', async (req, res) => {
   try {
     // Calculate metrics dynamically from projects table

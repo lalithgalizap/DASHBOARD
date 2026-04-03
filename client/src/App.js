@@ -30,7 +30,7 @@ function App() {
               </ProtectedRoute>
             } />
             <Route path="/portfolio" element={
-              <ProtectedRoute requirePermission resource="projects" action="view">
+              <ProtectedRoute requirePermission resource="portfolio" action="view">
                 <Portfolio />
               </ProtectedRoute>
             } />

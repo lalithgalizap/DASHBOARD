@@ -43,10 +43,9 @@ async function setupDatabase() {
       { permission_name: 'view_dashboard', description: 'Can view dashboard' },
       { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
       { permission_name: 'view_projects', description: 'Can view projects' },
-      { permission_name: 'view_updates', description: 'Can view weekly updates' },
-      { permission_name: 'manage_updates', description: 'Can create and edit weekly updates' },
       { permission_name: 'manage_users', description: 'Can create, edit, and delete users' },
-      { permission_name: 'manage_import', description: 'Can import data from Excel files' }
+      { permission_name: 'manage_import', description: 'Can import data from Excel files' },
+      { permission_name: 'view_portfolio', description: 'Can view portfolio dashboard' }
     ]);
     console.log(`Created ${permissions.length} permissions`);
 
