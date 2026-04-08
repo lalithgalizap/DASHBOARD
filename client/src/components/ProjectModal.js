@@ -3,8 +3,9 @@ import { X, ChevronDown, Search, Plus, X as XIcon } from 'lucide-react';
 import axios from 'axios';
 import './ProjectModal.css';
 
-function ProjectModal({ project, onClose, onSave, isAdmin }) {
+function ProjectModal({ project, onClose, onSave, isAdmin, canManageClients }) {
   console.log('ProjectModal - isAdmin prop:', isAdmin, 'type:', typeof isAdmin);
+  console.log('ProjectModal - canManageClients prop:', canManageClients);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -142,7 +143,7 @@ function ProjectModal({ project, onClose, onSave, isAdmin }) {
 
           <div className="form-group">
             <label>Clients</label>
-            {isAdmin === true ? (
+            {(isAdmin === true || canManageClients) ? (
               <div className="client-select-container">
                 <div className="selected-clients">
                   {formData.clients.map(client => (

@@ -180,7 +180,7 @@ const RoleManagement = () => {
                   className="btn-icon btn-danger"
                   onClick={() => handleDelete(role.id)}
                   title="Delete"
-                  disabled={['Admin', 'PM', 'PMO', 'CSP', 'Managers', 'SLTs'].includes(role.name)}
+                  disabled={['Admin', 'PM', 'PMO', 'CSP', 'Managers', 'SLTs', 'Superuser'].includes(role.name)}
                 >
                   <Trash2 size={16} />
                 </button>

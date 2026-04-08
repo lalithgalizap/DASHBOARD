@@ -167,6 +167,7 @@ function Dashboard() {
             setEditingProject(null);
           }}
           onSave={handleSaveProject}
+          canManageClients={hasPermission('projects', 'manage')}
         />
       )}
     </div>

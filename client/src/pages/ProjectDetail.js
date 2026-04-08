@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Edit, Archive, Upload, ArrowLeft } from 'lucide-react';
+import { Edit, Upload, ArrowLeft } from 'lucide-react';
 import ProjectModal from '../components/ProjectModal';
 import DetailsModal from '../components/DetailsModal';
 import ExcelUploadModal from '../components/ExcelUploadModal';
@@ -61,18 +61,6 @@ function ProjectDetail() {
     }
   };
 
-  const handleArchive = async () => {
-    if (window.confirm('Are you sure you want to archive this project?')) {
-      try {
-        await axios.delete(`/api/projects/${id}`);
-        navigate('/');
-      } catch (error) {
-        console.error('Error archiving project:', error);
-        alert('Error archiving project.');
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="project-detail-page">
@@ -110,10 +98,6 @@ function ProjectDetail() {
                   <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
                     <Edit size={16} />
                     Edit Project
-                  </button>
-                  <button className="action-btn archive-btn" onClick={handleArchive}>
-                    <Archive size={16} />
-                    Archive
                   </button>
                 </>
               )}

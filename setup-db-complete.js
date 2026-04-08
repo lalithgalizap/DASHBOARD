@@ -102,7 +102,14 @@ async function setupDatabase() {
       permissions: []
     });
 
-    console.log('Created 6 default roles');
+    // 7. Superuser - All admin access except role management
+    const superuserRole = await Role.create({
+      role_name: 'Superuser',
+      description: 'Superuser - Full access except role management (Cannot be deleted)',
+      permissions: []
+    });
+
+    console.log('Created 7 default roles');
 
     // Link permissions to each role
     console.log('Linking permissions to roles...');
@@ -144,6 +151,12 @@ async function setupDatabase() {
     const sltRolePermissions = sltPerms.map(pid => ({ role_id: sltsRole._id, permission_id: pid }));
     await RolePermission.insertMany(sltRolePermissions);
     console.log('Linked permissions to SLTs');
+
+    // Superuser: All permissions EXCEPT view_roles and manage_roles
+    const superuserPerms = getPermIds(['view_dashboard', 'manage_projects', 'view_projects', 'manage_import', 'view_portfolio', 'manage_portfolio', 'manage_closure_docs']);
+    const superuserRolePermissions = superuserPerms.map(pid => ({ role_id: superuserRole._id, permission_id: pid }));
+    await RolePermission.insertMany(superuserRolePermissions);
+    console.log('Linked permissions to Superuser');
 
     // Create admin user
     console.log('Creating admin user...');
