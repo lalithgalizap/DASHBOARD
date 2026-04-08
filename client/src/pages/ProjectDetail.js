@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Edit, Archive, Upload, ArrowLeft, X } from 'lucide-react';
+import { Edit, Archive, Upload, ArrowLeft } from 'lucide-react';
 import ProjectModal from '../components/ProjectModal';
 import DetailsModal from '../components/DetailsModal';
 import ExcelUploadModal from '../components/ExcelUploadModal';
@@ -73,28 +73,6 @@ function ProjectDetail() {
     }
   };
 
-  const getStageColor = (stage) => {
-    const colors = {
-      'Active': '#10b981',
-      'Advance': '#3b82f6',
-      'Incubate': '#8b5cf6',
-      'Maintain': '#f59e0b',
-      'Scale': '#06b6d4'
-    };
-    return colors[stage] || '#71717a';
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'Active': '#10b981',
-      'On-track': '#10b981',
-      'Development': '#3b82f6',
-      'Complete': '#8b5cf6',
-      'On-hold': '#ef4444'
-    };
-    return colors[status] || '#71717a';
-  };
-
   if (loading) {
     return (
       <div className="project-detail-page">
@@ -124,19 +102,21 @@ function ProjectDetail() {
             
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               {(isAdmin() || hasPermission('projects', 'manage')) && (
-                <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
-                  <Upload size={16} />
-                  Upload Document
-                </button>
+                <>
+                  <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
+                    <Upload size={16} />
+                    Upload Document
+                  </button>
+                  <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
+                    <Edit size={16} />
+                    Edit Project
+                  </button>
+                  <button className="action-btn archive-btn" onClick={handleArchive}>
+                    <Archive size={16} />
+                    Archive
+                  </button>
+                </>
               )}
-              <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
-                <Edit size={16} />
-                Edit Project
-              </button>
-              <button className="action-btn archive-btn" onClick={handleArchive}>
-                <Archive size={16} />
-                Archive
-              </button>
             </div>
           </div>
 
@@ -149,7 +129,7 @@ function ProjectDetail() {
 
           {/* Documents Section */}
           <section className="content-section documents-section">
-            <ProjectDocuments projectId={id} projectName={project?.name} />
+            <ProjectDocuments projectId={id} projectName={project?.name} canManage={isAdmin() || hasPermission('projects', 'manage')} />
           </section>
         </main>
       </div>

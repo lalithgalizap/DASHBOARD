@@ -44,28 +44,106 @@ async function setupDatabase() {
       { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
       { permission_name: 'view_projects', description: 'Can view projects' },
       { permission_name: 'manage_users', description: 'Can create, edit, and delete users' },
+      { permission_name: 'view_users', description: 'Can view users' },
       { permission_name: 'manage_import', description: 'Can import data from Excel files' },
-      { permission_name: 'view_portfolio', description: 'Can view portfolio dashboard' }
+      { permission_name: 'view_portfolio', description: 'Can view portfolio dashboard' },
+      { permission_name: 'manage_portfolio', description: 'Can manage portfolio settings' },
+      { permission_name: 'manage_roles', description: 'Can create, edit, and delete roles' },
+      { permission_name: 'view_roles', description: 'Can view roles' },
+      { permission_name: 'manage_closure_docs', description: 'Can upload and delete closure documents' }
     ]);
     console.log(`Created ${permissions.length} permissions`);
 
-    // Create admin role
-    console.log('Creating admin role...');
+    // Helper to get permission IDs by name
+    const getPermIds = (names) => permissions.filter(p => names.includes(p.permission_name)).map(p => p._id);
+
+    // Create 6 default roles (undeletable)
+    console.log('Creating default roles...');
+
+    // 1. Admin - Full access
     const adminRole = await Role.create({
       role_name: 'Admin',
-      description: 'Full system access',
+      description: 'Full system access (Cannot be deleted)',
       permissions: []
     });
-    console.log('Admin role created');
 
-    // Link permissions to admin role
-    console.log('Linking permissions to admin role...');
-    const rolePermissions = permissions.map(p => ({
+    // 2. PM - Read/write projects only
+    const pmRole = await Role.create({
+      role_name: 'PM',
+      description: 'Project Manager - Read/write projects only (Cannot be deleted)',
+      permissions: []
+    });
+
+    // 3. PMO - Read/write projects and portfolio
+    const pmoRole = await Role.create({
+      role_name: 'PMO',
+      description: 'PMO - Read/write projects and portfolio (Cannot be deleted)',
+      permissions: []
+    });
+
+    // 4. CSP - Read/write performance/portfolio
+    const cspRole = await Role.create({
+      role_name: 'CSP',
+      description: 'CSP - Read/write performance and portfolio (Cannot be deleted)',
+      permissions: []
+    });
+
+    // 5. Managers - Read projects and portfolio
+    const managersRole = await Role.create({
+      role_name: 'Managers',
+      description: 'Managers - Read projects and portfolio (Cannot be deleted)',
+      permissions: []
+    });
+
+    // 6. SLTs - Read everything
+    const sltsRole = await Role.create({
+      role_name: 'SLTs',
+      description: 'Senior Leadership - Read everything (Cannot be deleted)',
+      permissions: []
+    });
+
+    console.log('Created 6 default roles');
+
+    // Link permissions to each role
+    console.log('Linking permissions to roles...');
+
+    // Admin gets all permissions
+    const adminRolePermissions = permissions.map(p => ({
       role_id: adminRole._id,
       permission_id: p._id
     }));
-    await RolePermission.insertMany(rolePermissions);
-    console.log(`Linked ${rolePermissions.length} permissions to admin role`);
+    await RolePermission.insertMany(adminRolePermissions);
+    console.log('Linked all permissions to Admin');
+
+    // PM: view_dashboard, view_projects, manage_projects, manage_import, manage_closure_docs
+    const pmPerms = getPermIds(['view_dashboard', 'view_projects', 'manage_projects', 'manage_import', 'manage_closure_docs']);
+    const pmRolePermissions = pmPerms.map(pid => ({ role_id: pmRole._id, permission_id: pid }));
+    await RolePermission.insertMany(pmRolePermissions);
+    console.log('Linked permissions to PM');
+
+    // PMO: view_dashboard, view_projects, manage_projects, view_portfolio, manage_import, manage_closure_docs
+    const pmoPerms = getPermIds(['view_dashboard', 'view_projects', 'manage_projects', 'view_portfolio', 'manage_import', 'manage_closure_docs']);
+    const pmoRolePermissions = pmoPerms.map(pid => ({ role_id: pmoRole._id, permission_id: pid }));
+    await RolePermission.insertMany(pmoRolePermissions);
+    console.log('Linked permissions to PMO');
+
+    // CSP: view_dashboard, view_portfolio, manage_portfolio, view_projects, manage_import
+    const cspPerms = getPermIds(['view_dashboard', 'view_portfolio', 'manage_portfolio', 'view_projects', 'manage_import']);
+    const cspRolePermissions = cspPerms.map(pid => ({ role_id: cspRole._id, permission_id: pid }));
+    await RolePermission.insertMany(cspRolePermissions);
+    console.log('Linked permissions to CSP');
+
+    // Managers: view_dashboard, view_projects, view_portfolio
+    const managerPerms = getPermIds(['view_dashboard', 'view_projects', 'view_portfolio']);
+    const managerRolePermissions = managerPerms.map(pid => ({ role_id: managersRole._id, permission_id: pid }));
+    await RolePermission.insertMany(managerRolePermissions);
+    console.log('Linked permissions to Managers');
+
+    // SLTs: view_dashboard, view_projects, view_portfolio, view_users, view_roles, manage_portfolio
+    const sltPerms = getPermIds(['view_dashboard', 'view_projects', 'view_portfolio', 'view_users', 'view_roles', 'manage_portfolio']);
+    const sltRolePermissions = sltPerms.map(pid => ({ role_id: sltsRole._id, permission_id: pid }));
+    await RolePermission.insertMany(sltRolePermissions);
+    console.log('Linked permissions to SLTs');
 
     // Create admin user
     console.log('Creating admin user...');

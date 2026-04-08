@@ -16,6 +16,9 @@ function Header() {
     navigate('/login');
   };
 
+  // Don't show header on login page
+  if (location.pathname === '/login') return null;
+
   return (
     <header className="header">
       <div className="header-content">
@@ -31,10 +34,22 @@ function Header() {
                   Projects
                 </Link>
               )}
-              <Link to="/portfolio" className={`nav-link ${location.pathname === '/portfolio' ? 'active' : ''}`}>Portfolio</Link>
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Performance</button>
-              <button className="nav-link" onClick={(e) => e.preventDefault()}>Staff Augmentation</button>
-              {isAdmin() && (
+              {hasPermission('portfolio', 'view') && (
+                <Link to="/portfolio" className={`nav-link ${location.pathname === '/portfolio' ? 'active' : ''}`}>
+                  Portfolio
+                </Link>
+              )}
+              {hasPermission('portfolio', 'manage') && (
+                <button className="nav-link" onClick={(e) => e.preventDefault()}>
+                  Performance
+                </button>
+              )}
+              {hasPermission('users', 'view') && (
+                <button className="nav-link" onClick={(e) => e.preventDefault()}>
+                  Staff Augmentation
+                </button>
+              )}
+              {(hasPermission('users', 'manage') || hasPermission('roles', 'manage')) && (
                 <div className="nav-dropdown">
                   <span className="nav-link">
                     <Shield size={16} />
@@ -42,14 +57,18 @@ function Header() {
                     <ChevronDown size={14} />
                   </span>
                   <div className="dropdown-menu">
-                    <Link to="/admin/users" className={location.pathname === '/admin/users' ? 'active' : ''}>
-                      <User size={14} />
-                      Users
-                    </Link>
-                    <Link to="/admin/roles" className={location.pathname === '/admin/roles' ? 'active' : ''}>
-                      <Shield size={14} />
-                      Roles
-                    </Link>
+                    {hasPermission('users', 'manage') && (
+                      <Link to="/admin/users" className={location.pathname === '/admin/users' ? 'active' : ''}>
+                        <User size={14} />
+                        Users
+                      </Link>
+                    )}
+                    {hasPermission('roles', 'manage') && (
+                      <Link to="/admin/roles" className={location.pathname === '/admin/roles' ? 'active' : ''}>
+                        <Shield size={14} />
+                        Roles
+                      </Link>
+                    )}
                   </div>
                 </div>
               )}

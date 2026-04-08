@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Shield, Plus, Edit2, Trash2, Check, X, RefreshCw } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, Check, RefreshCw } from 'lucide-react';
 import './Admin.css';
 
 const RoleManagement = () => {
@@ -107,15 +107,38 @@ const RoleManagement = () => {
     }
   };
 
-  const getPermissionsByResource = () => {
+  const getPermissionsByPage = () => {
+    // Map permissions to pages (frontend-only organization)
+    const pageMapping = {
+      'Dashboard': ['view_dashboard'],
+      'Projects': ['view_projects', 'manage_projects', 'manage_import', 'manage_closure_docs'],
+      'Portfolio': ['view_portfolio', 'manage_portfolio'],
+      'User Management': ['view_users', 'manage_users'],
+      'Role Management': ['view_roles', 'manage_roles']
+    };
+    
     const grouped = {};
     permissions.forEach(perm => {
-      if (!grouped[perm.resource]) {
-        grouped[perm.resource] = [];
+      // Find which page this permission belongs to
+      for (const [page, permNames] of Object.entries(pageMapping)) {
+        if (permNames.includes(perm.permission_name)) {
+          if (!grouped[page]) {
+            grouped[page] = [];
+          }
+          grouped[page].push(perm);
+          break;
+        }
       }
-      grouped[perm.resource].push(perm);
     });
-    return grouped;
+    
+    // Return in consistent order
+    const ordered = {};
+    Object.keys(pageMapping).forEach(page => {
+      if (grouped[page]) {
+        ordered[page] = grouped[page];
+      }
+    });
+    return ordered;
   };
 
   if (loading) {
@@ -157,7 +180,7 @@ const RoleManagement = () => {
                   className="btn-icon btn-danger"
                   onClick={() => handleDelete(role.id)}
                   title="Delete"
-                  disabled={['Admin', 'Manager', 'Viewer'].includes(role.name)}
+                  disabled={['Admin', 'PM', 'PMO', 'CSP', 'Managers', 'SLTs'].includes(role.name)}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -209,11 +232,11 @@ const RoleManagement = () => {
               </div>
 
               <div className="permissions-section">
-                <label>Permissions</label>
+                <label>Permissions by Page</label>
                 <div className="permissions-by-resource">
-                  {Object.entries(getPermissionsByResource()).map(([resource, perms]) => (
-                    <div key={resource} className="resource-group">
-                      <h4>{resource}</h4>
+                  {Object.entries(getPermissionsByPage()).map(([page, perms]) => (
+                    <div key={page} className="resource-group">
+                      <h4>{page}</h4>
                       <div className="permission-checkboxes">
                         {perms.map(perm => (
                           <label key={perm.id} className="permission-checkbox">
