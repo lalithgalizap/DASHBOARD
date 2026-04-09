@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { RefreshCw, TrendingUp, TrendingDown, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 import './ProjectDashboard.css';
 
 function ProjectDashboard({ projectId, projectName, project }) {
@@ -39,10 +39,6 @@ function ProjectDashboard({ projectId, projectName, project }) {
     }
   };
 
-  const handleRefresh = () => {
-    fetchDocuments();
-  };
-
   if (loading || !documents) {
     return <div className="dashboard-loading">Loading dashboard...</div>;
   }
@@ -58,6 +54,21 @@ function ProjectDashboard({ projectId, projectName, project }) {
   const analyzeTaskPerformance = () => {
     const tasks = documents?.projectPlan || [];
     
+    // Status-based breakdown (all tasks)
+    const completed = tasks.filter(t => {
+      const status = t.Status?.toLowerCase();
+      return status === 'completed' || status === 'complete';
+    });
+    const inProgress = tasks.filter(t => {
+      const status = t.Status?.toLowerCase();
+      return status === 'in progress' || status === 'inprogress' || status === 'started';
+    });
+    const notStarted = tasks.filter(t => {
+      const status = t.Status?.toLowerCase();
+      return !status || status === 'not started' || status === 'notstarted' || status === 'planned';
+    });
+    
+    // Date-based performance (only tasks with actual dates)
     const tasksWithActualDates = tasks.filter(t => t['Actual End Date']);
     
     const onSchedule = tasksWithActualDates.filter(t => {
@@ -107,7 +118,11 @@ function ProjectDashboard({ projectId, projectName, project }) {
       onSchedule,
       delayedStart,
       lateFinish,
-      total: tasksWithActualDates
+      total: tasks,
+      completed,
+      inProgress,
+      notStarted,
+      hasActualDates: tasksWithActualDates.length > 0
     };
   };
 
@@ -128,9 +143,6 @@ function ProjectDashboard({ projectId, projectName, project }) {
     ).length;
 
     const projectCompletion = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-    const plannedTasks = tasks.filter(t => t['Planned End Date']).length;
-    const actualCompletedTasks = tasks.filter(t => t['Actual End Date']).length;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -208,7 +220,7 @@ function ProjectDashboard({ projectId, projectName, project }) {
 
     return {
       projectCompletion,
-      plannedVsActual: { planned: plannedTasks, actual: actualCompletedTasks },
+      plannedVsActual: { planned: totalTasks, actual: completedTasks },
       milestoneCompletion: { completed: completedMilestones, total: totalMilestones },
       upcomingMilestones,
       overdueMilestones,
@@ -293,6 +305,11 @@ function ProjectDashboard({ projectId, projectName, project }) {
           <div className="metric-label">Tasks Completed</div>
           <div className="metric-value">
             {metrics.plannedVsActual.actual} of {metrics.plannedVsActual.planned}
+            {metrics.plannedVsActual.planned > 0 && (
+              <span style={{ fontSize: '14px', color: '#6b7280', marginLeft: '8px' }}>
+                ({Math.round((metrics.plannedVsActual.actual / metrics.plannedVsActual.planned) * 100)}%)
+              </span>
+            )}
           </div>
           <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '8px' }}>Click for performance details</div>
         </div>
@@ -445,32 +462,60 @@ function ProjectDashboard({ projectId, projectName, project }) {
               </div>
               
               <div className="modal-body" style={{ padding: '20px' }}>
-                {/* Summary Cards */}
+                {/* Status Summary Cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
                   <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '12px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>ON SCHEDULE</div>
-                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#16a34a' }}>{taskPerformance.onSchedule.length}</div>
-                    <div style={{ fontSize: '11px', color: '#15803d' }}>Started & finished on time</div>
+                    <div style={{ fontSize: '12px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>COMPLETED</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#16a34a' }}>{taskPerformance.completed.length}</div>
+                    <div style={{ fontSize: '11px', color: '#15803d' }}>Tasks with status Completed</div>
                   </div>
                   
-                  <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', marginBottom: '4px' }}>DELAYED START</div>
-                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#f59e0b' }}>{taskPerformance.delayedStart.length}</div>
-                    <div style={{ fontSize: '11px', color: '#b45309' }}>Started after planned date</div>
-                  </div>
-                  
-                  <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '12px', color: '#991b1b', fontWeight: '600', marginBottom: '4px' }}>LATE FINISH</div>
-                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>{taskPerformance.lateFinish.length}</div>
-                    <div style={{ fontSize: '11px', color: '#b91c1c' }}>Finished after deadline</div>
+                  <div style={{ background: '#dbeafe', border: '1px solid #93c5fd', padding: '16px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '12px', color: '#1e40af', fontWeight: '600', marginBottom: '4px' }}>IN PROGRESS</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#3b82f6' }}>{taskPerformance.inProgress.length}</div>
+                    <div style={{ fontSize: '11px', color: '#1d4ed8' }}>Tasks currently in progress</div>
                   </div>
                   
                   <div style={{ background: '#f3f4f6', border: '1px solid #d1d5db', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '12px', color: '#374151', fontWeight: '600', marginBottom: '4px' }}>TOTAL COMPLETED</div>
-                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#111827' }}>{taskPerformance.total.length}</div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Tasks with actual dates</div>
+                    <div style={{ fontSize: '12px', color: '#374151', fontWeight: '600', marginBottom: '4px' }}>NOT STARTED</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#6b7280' }}>{taskPerformance.notStarted.length}</div>
+                    <div style={{ fontSize: '11px', color: '#4b5563' }}>Tasks yet to begin</div>
+                  </div>
+                  
+                  <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', padding: '16px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '12px', color: '#7e22ce', fontWeight: '600', marginBottom: '4px' }}>TOTAL TASKS</div>
+                    <div style={{ fontSize: '28px', fontWeight: '700', color: '#9333ea' }}>{taskPerformance.total.length}</div>
+                    <div style={{ fontSize: '11px', color: '#a855f7' }}>All project tasks</div>
                   </div>
                 </div>
+
+                {/* Performance Metrics - Only when actual dates exist */}
+                {taskPerformance.hasActualDates && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px', borderBottom: '2px solid #e5e7eb', paddingBottom: '8px' }}>
+                      Performance Analysis (Based on Actual Dates)
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #86efac', padding: '16px', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '12px', color: '#166534', fontWeight: '600', marginBottom: '4px' }}>ON SCHEDULE</div>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#16a34a' }}>{taskPerformance.onSchedule.length}</div>
+                        <div style={{ fontSize: '11px', color: '#15803d' }}>Started & finished on time</div>
+                      </div>
+                      
+                      <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', padding: '16px', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '12px', color: '#92400e', fontWeight: '600', marginBottom: '4px' }}>DELAYED START</div>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#f59e0b' }}>{taskPerformance.delayedStart.length}</div>
+                        <div style={{ fontSize: '11px', color: '#b45309' }}>Started after planned date</div>
+                      </div>
+                      
+                      <div style={{ background: '#fee2e2', border: '1px solid #fca5a5', padding: '16px', borderRadius: '8px' }}>
+                        <div style={{ fontSize: '12px', color: '#991b1b', fontWeight: '600', marginBottom: '4px' }}>LATE FINISH</div>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#dc2626' }}>{taskPerformance.lateFinish.length}</div>
+                        <div style={{ fontSize: '11px', color: '#b91c1c' }}>Finished after deadline</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Task Tables */}
                 {taskPerformance.onSchedule.length > 0 && (
@@ -579,7 +624,56 @@ function ProjectDashboard({ projectId, projectName, project }) {
 
                 {taskPerformance.total.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                    <p>No tasks with actual dates found. Tasks need both Actual Start Date and Actual End Date to appear here.</p>
+                    <p>No tasks found. Add tasks to the project plan to see performance metrics.</p>
+                  </div>
+                )}
+
+                {/* All Tasks Table */}
+                {taskPerformance.total.length > 0 && (
+                  <div style={{ marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#111827', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircle size={16} /> All Tasks ({taskPerformance.total.length})
+                    </h3>
+                    <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse', background: 'white' }}>
+                      <thead style={{ background: 'white', borderBottom: '2px solid #e5e7eb' }}>
+                        <tr>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Task ID</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Task Name</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Status</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Planned Start</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Actual Start</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Planned End</th>
+                          <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600', color: '#111827' }}>Actual End</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {taskPerformance.total.map((task, idx) => (
+                          <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', background: 'white' }}>
+                            <td style={{ padding: '10px', color: '#111827' }}>{task['Task ID']}</td>
+                            <td style={{ padding: '10px', color: '#111827' }}>{task['Task Name']}</td>
+                            <td style={{ padding: '10px', color: '#111827' }}>
+                              <span style={{ 
+                                display: 'inline-block', 
+                                padding: '2px 8px', 
+                                borderRadius: '4px', 
+                                fontSize: '11px', 
+                                fontWeight: '600',
+                                backgroundColor: task['Status']?.toLowerCase() === 'completed' || task['Status']?.toLowerCase() === 'complete' ? '#dcfce7' : 
+                                                task['Status']?.toLowerCase() === 'in progress' || task['Status']?.toLowerCase() === 'inprogress' ? '#dbeafe' : '#f3f4f6',
+                                color: task['Status']?.toLowerCase() === 'completed' || task['Status']?.toLowerCase() === 'complete' ? '#166534' : 
+                                       task['Status']?.toLowerCase() === 'in progress' || task['Status']?.toLowerCase() === 'inprogress' ? '#1e40af' : '#6b7280'
+                              }}>
+                                {task['Status'] || 'Not Started'}
+                              </span>
+                            </td>
+                            <td style={{ padding: '10px', color: '#111827' }}>{formatDate(task['Planned Start Date'])}</td>
+                            <td style={{ padding: '10px', color: task['Actual Start Date'] ? '#16a34a' : '#9ca3af' }}>{task['Actual Start Date'] ? formatDate(task['Actual Start Date']) : '—'}</td>
+                            <td style={{ padding: '10px', color: '#111827' }}>{formatDate(task['Planned End Date'])}</td>
+                            <td style={{ padding: '10px', color: task['Actual End Date'] ? '#16a34a' : '#9ca3af' }}>{task['Actual End Date'] ? formatDate(task['Actual End Date']) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
