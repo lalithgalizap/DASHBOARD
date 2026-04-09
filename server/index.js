@@ -8,6 +8,7 @@ const path = require('path');
 const bcrypt = require('bcryptjs');
 const dbAdapter = require('./dbAdapter');
 const { authenticate, requirePermission, requireAdmin, getUserPermissions, generateToken } = require('./auth');
+const { sendWelcomeEmail } = require('./email');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -149,6 +150,13 @@ app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'man
       if (fs.existsSync(excelFilePath)) {
         fs.unlinkSync(excelFilePath);
         // Excel file removed
+      }
+      
+      // Delete closure documents folder if it exists
+      const closureDocsPath = path.join(__dirname, '..', 'project-closure-documents', req.params.id);
+      if (fs.existsSync(closureDocsPath)) {
+        fs.rmSync(closureDocsPath, { recursive: true, force: true });
+        // Closure documents folder removed
       }
     }
     
@@ -796,7 +804,7 @@ app.get('/api/users', authenticate, requireAdmin, async (req, res) => {
 
 // Create user
 app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
-  const { username, email, password, role_id, is_active } = req.body;
+  const { username, email, password, role_id, is_active, send_email } = req.body;
   
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Username, email, and password are required' });
@@ -805,6 +813,15 @@ app.post('/api/users', authenticate, requireAdmin, async (req, res) => {
   try {
     const hashedPassword = bcrypt.hashSync(password, 10);
     const result = await dbAdapter.createUser({ username, email, password: hashedPassword, role_id: role_id || null });
+    
+    // Send welcome email if checkbox is checked
+    if (send_email) {
+      const emailResult = await sendWelcomeEmail(email, username, password);
+      if (!emailResult.success) {
+        console.warn('Failed to send welcome email:', emailResult.error);
+      }
+    }
+    
     res.json({ ...result, message: 'User created successfully' });
   } catch (err) {
     if (err.message.includes('duplicate') || err.message.includes('unique')) {

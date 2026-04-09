@@ -209,3 +209,14 @@
   font-size: 16px;
   margin: 0;
 }
+
+.login-help {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.login-help p {
+  color: #ffffff;
+  font-size: 12px;
+  margin: 0;
+}

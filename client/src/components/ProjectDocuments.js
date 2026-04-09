@@ -1374,7 +1374,7 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
 
     // Get CSS class for cell based on column
     const getCellClass = (column, value) => {
-      if (column === 'Status') return `status-badge ${value?.toLowerCase().replace(/\s+/g, '-')}`;
+      if (column === 'Status' && typeof value === 'string') return `status-badge ${value.toLowerCase().replace(/\s+/g, '-')}`;
       return '';
     };
 
@@ -2403,18 +2403,6 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
           </div>
         )}
 
-        <p className="placeholder-text">Project closure documentation will be available upon project completion.</p>
-        <div className="closure-checklist">
-          <h4>Closure Checklist</h4>
-          <ul>
-            <li>☐ All deliverables completed and approved</li>
-            <li>☐ Lessons learned documented</li>
-            <li>☐ Final budget reconciliation</li>
-            <li>☐ Team performance review</li>
-            <li>☐ Knowledge transfer completed</li>
-            <li>☐ Stakeholder sign-off obtained</li>
-          </ul>
-        </div>
       </div>
     );
   };

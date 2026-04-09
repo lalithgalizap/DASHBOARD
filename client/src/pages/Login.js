@@ -106,6 +106,10 @@ const Login = () => {
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
+
+          <div className="login-help">
+            <p>Having Trouble SignIng In Please Contact Daksh Hooda (daksh.hooda@zapcg.com)</p>
+          </div>
         </form>
       </div>
     </div>

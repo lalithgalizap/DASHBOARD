@@ -16,11 +16,6 @@ function PortfolioMetrics({ metrics, onMetricClick }) {
 
   return (
     <div className="portfolio-metrics">
-      <div className="portfolio-header">
-        <h1 className="portfolio-title">Portfolio Overview</h1>
-        <p className="portfolio-last-updated">Last Update: {formatDate(metrics.lastUpdated)}</p>
-      </div>
-      
       <div className="metrics-grid">
         {/* Row 1 */}
         <div className="metric-card metric-card-blue" onClick={() => handleClick('active')} style={{cursor: 'pointer'}}>
@@ -84,12 +79,6 @@ function PortfolioMetrics({ metrics, onMetricClick }) {
           <div className="metric-value">{metrics.openCriticalIssuesTotal || 0}</div>
           <div className="metric-label">Open Critical Issues</div>
           <div className="metric-sublabel">All open issues</div>
-        </div>
-
-        <div className="metric-card metric-card-default">
-          <div className="metric-value">{metrics.openEscalations}</div>
-          <div className="metric-label">Open Escalations</div>
-          <div className="metric-sublabel">Escalated and not closed</div>
         </div>
       </div>
     </div>

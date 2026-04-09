@@ -53,7 +53,12 @@ const UserManagement = () => {
         if (!updateData.password) delete updateData.password;
         await axios.put(`/api/users/${editingUser.id}`, updateData);
       } else {
-        await axios.post('/api/users', formData);
+        // For new users: always active, pass send_email flag
+        const createData = {
+          ...formData,
+          is_active: 1
+        };
+        await axios.post('/api/users', createData);
       }
       setShowModal(false);
       setEditingUser(null);
@@ -103,7 +108,7 @@ const UserManagement = () => {
       email: '',
       password: '',
       role_id: '',
-      is_active: 1
+      send_email: true
     });
   };
 
@@ -236,16 +241,18 @@ const UserManagement = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-group checkbox">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={e => setFormData({ ...formData, is_active: e.target.checked ? 1 : 0 })}
-                  />
-                  Active
-                </label>
-              </div>
+              {!editingUser && (
+                <div className="form-group checkbox">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={formData.send_email}
+                      onChange={e => setFormData({ ...formData, send_email: e.target.checked })}
+                    />
+                    Send Welcome Email
+                  </label>
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
