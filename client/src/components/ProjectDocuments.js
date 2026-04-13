@@ -301,6 +301,11 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
       item.Status === 'Behind'
     ).length;
 
+    const statusEntries = Object.entries(stats.byStatus || {});
+    const categoryEntries = Object.entries(stats.byCategory || {});
+    const maxStatusCount = statusEntries.length > 0 ? Math.max(...statusEntries.map(([, count]) => count || 0)) : 1;
+    const maxCategoryCount = categoryEntries.length > 0 ? Math.max(...categoryEntries.map(([, count]) => count || 0)) : 1;
+
     return (
       <div className="raid-visualization-container">
         {/* Executive Summary Cards */}
@@ -345,11 +350,13 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
             <h4>Status Overview</h4>
             <div className="column-chart">
               <div className="chart-area">
-                {Object.entries(stats.byStatus).map(([status, count]) => {
+                {statusEntries.map(([status, count]) => {
                   // Use actual percentage of total items for true proportional height
                   const percentage = Math.round((count / totalItems) * 100);
-                  // Scale with 2x multiplier for better visibility
-                  const heightPercent = Math.min((count / totalItems) * 200, 100);
+                  // Normalize to the largest column so differences are amplified but still clamped
+                  const heightPercent = count > 0
+                    ? Math.min(Math.max((count / (maxStatusCount || 1)) * 100, 8), 100)
+                    : 0;
                   const statusColors = {
                     'Not Started': '#6b7280',
                     'In-Progress': '#3b82f6',
@@ -465,11 +472,12 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
             <h4>Items by Category</h4>
             <div className="column-chart">
               <div className="chart-area">
-                {Object.entries(stats.byCategory).map(([category, count]) => {
-                  // Use actual percentage of total items for true proportional height
+                {categoryEntries.map(([category, count]) => {
                   const percentage = Math.round((count / totalItems) * 100);
-                  // Scale to chart height with 2x multiplier for better visibility
-                  const heightPercent = Math.min((count / totalItems) * 200, 100);
+                  // Normalize to the largest column so differences are amplified but still clamped
+                  const heightPercent = count > 0
+                    ? Math.min(Math.max((count / (maxCategoryCount || 1)) * 100, 8), 100)
+                    : 0;
                   const categoryColors = {
                     'Quality': '#3b82f6',
                     'Cost': '#10b981',

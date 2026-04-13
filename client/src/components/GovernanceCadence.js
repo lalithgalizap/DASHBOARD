@@ -145,9 +145,9 @@ function GovernanceCadence({ documents }) {
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
           >
-            <div style={{display: 'flex', alignItems: 'center', gap: '16px', flex: 1}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0}}>
               <span style={{fontSize: '20px'}}>📅</span>
-              <div style={{minWidth: '200px'}}>
+              <div style={{minWidth: '200px', maxWidth: '320px', flex: '0 1 320px', wordBreak: 'break-word'}}>
                 <div style={{fontWeight: '600', color: '#1f2937', fontSize: '14px'}}>
                   {governance['Forum / Meeting Name'] || governance['Meeting Name'] || governance['Meeting Type'] || 'Untitled Meeting'}
                 </div>
@@ -157,7 +157,7 @@ function GovernanceCadence({ documents }) {
               </div>
               
               {/* Additional Fields */}
-              <div style={{display: 'flex', gap: '16px', flex: 1, justifyContent: 'center'}}>
+              <div style={{display: 'flex', gap: '16px', flex: '0 1 360px', justifyContent: 'space-around', marginLeft: '24px'}}>
                 <div style={{textAlign: 'center', minWidth: '100px'}}>
                   <div style={{fontSize: '10px', color: '#9ca3af', textTransform: 'uppercase', marginBottom: '2px'}}>Frequency</div>
                   <div style={{fontSize: '12px', color: '#374151', fontWeight: '500'}}>

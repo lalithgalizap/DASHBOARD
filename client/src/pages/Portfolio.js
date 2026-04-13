@@ -23,6 +23,10 @@ function Portfolio() {
   const [activeSearch, setActiveSearch] = useState('');
   const [ragSummaryExpanded, setRagSummaryExpanded] = useState(null);
   const [ragProjectExpanded, setRagProjectExpanded] = useState(null);
+  const [milestoneTooltip, setMilestoneTooltip] = useState(null);
+  const [ragSearchQuery, setRagSearchQuery] = useState('');
+  const [ragExpandedProjectId, setRagExpandedProjectId] = useState(null);
+  const [ragCategoryModal, setRagCategoryModal] = useState(null);
 
   useEffect(() => {
     const fetchProjectsWithRAG = async () => {
@@ -70,6 +74,11 @@ function Portfolio() {
               });
               const upcomingMilestones = upcomingMilestoneDetails.length;
               
+              // Get ALL milestones with dates for timeline visualization
+              const allMilestoneDetails = milestones.filter(m => {
+                return m['Planned End Date'] && convertExcelDateToJS(m['Planned End Date']) !== null;
+              });
+              
               // Count overdue tasks
               const overdueTasks = tasks.filter(t => {
                 if (!t['Planned End Date'] || t.Status?.toLowerCase() === 'completed') return false;
@@ -102,10 +111,10 @@ function Portfolio() {
                 ragStatus = 'Amber';
               }
               
-              return { ...project, ragStatus, overdueMilestones, overdueMilestoneDetails, upcomingMilestones, upcomingMilestoneDetails, overdueTasks, openCriticalRisks, openCriticalRisksDetails, openCriticalIssues, openCriticalIssuesDetails, projectCharter: documents.projectCharter };
+              return { ...project, ragStatus, overdueMilestones, overdueMilestoneDetails, upcomingMilestones, upcomingMilestoneDetails, allMilestoneDetails, overdueTasks, openCriticalRisks, openCriticalRisksDetails, openCriticalIssues, openCriticalIssuesDetails, projectCharter: documents.projectCharter };
             } catch (err) {
               // If documents fail to load, default to Green but still try to get charter from project if available
-              return { ...project, ragStatus: 'Green', overdueMilestones: 0, overdueMilestoneDetails: [], upcomingMilestones: 0, upcomingMilestoneDetails: [], overdueTasks: 0, openCriticalRisks: 0, openCriticalRisksDetails: [], openCriticalIssues: 0, openCriticalIssuesDetails: [], projectCharter: project.projectCharter || null };
+              return { ...project, ragStatus: 'Green', overdueMilestones: 0, overdueMilestoneDetails: [], upcomingMilestones: 0, upcomingMilestoneDetails: [], allMilestoneDetails: [], overdueTasks: 0, openCriticalRisks: 0, openCriticalRisksDetails: [], openCriticalIssues: 0, openCriticalIssuesDetails: [], projectCharter: project.projectCharter || null };
             }
           })
         );
@@ -274,6 +283,70 @@ function Portfolio() {
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return '1 day ago';
     return `${diffDays} days ago`;
+  };
+
+  // Timeline helper functions for RAG board project cards
+  const getMilestoneStatus = (milestone) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const endDate = convertExcelDateToJS(milestone['Planned End Date']);
+    if (!endDate) return 'unknown';
+    endDate.setHours(0, 0, 0, 0);
+    const isCompleted = milestone.Status && (milestone.Status.toLowerCase() === 'completed' || milestone.Status.toLowerCase() === 'complete');
+    if (isCompleted) return 'completed';
+    if (endDate < today) return 'overdue';
+    const fourteenDaysFromNow = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
+    if (endDate <= fourteenDaysFromNow) return 'upcoming';
+    return 'future';
+  };
+
+  const getMilestoneColor = (status) => {
+    switch (status) {
+      case 'completed': return '#10b981'; // green
+      case 'overdue': return '#ef4444'; // red
+      case 'upcoming': return '#f59e0b'; // amber
+      case 'future': return '#9ca3af'; // gray
+      default: return '#6b7280';
+    }
+  };
+
+  const calculateTimelineRange = (milestones) => {
+    if (!milestones || milestones.length === 0) return null;
+    const dates = milestones
+      .map(m => convertExcelDateToJS(m['Planned End Date']))
+      .filter(d => d !== null);
+    if (dates.length === 0) return null;
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
+    // Add buffer days
+    minDate.setDate(minDate.getDate() - 7);
+    maxDate.setDate(maxDate.getDate() + 14);
+    return { start: minDate, end: maxDate };
+  };
+
+  const getMilestonePosition = (milestoneDate, range) => {
+    if (!milestoneDate || !range) return 50;
+    const date = convertExcelDateToJS(milestoneDate);
+    if (!date) return 50;
+    const totalDuration = range.end.getTime() - range.start.getTime();
+    const position = date.getTime() - range.start.getTime();
+    return Math.max(0, Math.min(100, (position / totalDuration) * 100));
+  };
+
+  const getTodayPosition = (range) => {
+    if (!range) return 50;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const totalDuration = range.end.getTime() - range.start.getTime();
+    const position = today.getTime() - range.start.getTime();
+    return Math.max(0, Math.min(100, (position / totalDuration) * 100));
+  };
+
+  const formatMilestoneDate = (dateValue) => {
+    if (!dateValue) return 'N/A';
+    const date = convertExcelDateToJS(dateValue);
+    if (!date) return 'N/A';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
   const ragBuckets = useMemo(() => ({
@@ -471,36 +544,340 @@ function Portfolio() {
           }}
         />
 
+      {/* RAG Board Search */}
+      <div className="rag-board-search-container" style={{ margin: '0 24px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>Search Projects:</span>
+        <input
+          type="text"
+          placeholder="Search by project name, client, or owner..."
+          value={ragSearchQuery}
+          onChange={(e) => setRagSearchQuery(e.target.value)}
+          style={{
+            flex: 1,
+            maxWidth: '400px',
+            padding: '8px 12px',
+            border: '1px solid #e5e7eb',
+            borderRadius: '6px',
+            fontSize: '14px',
+            outline: 'none'
+          }}
+        />
+        {ragSearchQuery && (
+          <button
+            onClick={() => setRagSearchQuery('')}
+            style={{
+              background: 'none',
+              border: 'none',
+              fontSize: '18px',
+              cursor: 'pointer',
+              color: '#6b7280'
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       <section className="portfolio-rag-board">
-        {['red', 'amber', 'green'].map(status => (
-          <div key={status} className={`rag-column rag-${status}`}>
-            <div className="rag-column-header">
-              <div>
-                <span className="rag-column-label">{status === 'red' ? 'Critical' : status === 'amber' ? 'Caution' : 'On Track'}</span>
-                <p className="rag-column-helper">{status === 'green' ? 'Monitoring' : 'Immediate follow-up'}</p>
-              </div>
-              <span className="rag-column-count">{ragBuckets[status].length}</span>
-            </div>
-            <div className="rag-column-body">
-              {ragBuckets[status].length === 0 && (
-                <p className="rag-empty">No projects in this band</p>
-              )}
-              {ragBuckets[status].slice(0, 6).map(project => (
-                <div key={project.id || project._id} className="rag-project-card">
-                  <div className="rag-project-title">{project.name}</div>
-                  <div className="rag-project-meta">
-                    <span>{project.clients || 'Client TBD'}</span>
-                  </div>
-                  <div className="rag-project-stats">
-                    <span>{project.overdueMilestones || 0} overdue milestones</span>
-                    <span>{project.openCriticalRisks || 0} risks</span>
-                    <span>{project.openCriticalIssues || 0} issues</span>
-                  </div>
+        {['red', 'amber', 'green'].map(status => {
+          // Filter projects based on search query
+          const filteredProjects = ragBuckets[status].filter(project => {
+            if (!ragSearchQuery.trim()) return true;
+            const query = ragSearchQuery.toLowerCase();
+            const nameMatch = project.name?.toLowerCase().includes(query);
+            const clientMatch = project.clients?.toLowerCase().includes(query);
+            const ownerMatch = project.projectCharter?.['Project Owner']?.toLowerCase().includes(query);
+            return nameMatch || clientMatch || ownerMatch;
+          });
+          const previewProjects = filteredProjects.slice(0, 3);
+          const hasMoreProjects = filteredProjects.length > 3;
+
+          return (
+            <div key={status} className={`rag-column rag-${status}`}>
+              <div className="rag-column-header">
+                <div>
+                  <span className="rag-column-label">{status === 'red' ? 'Critical' : status === 'amber' ? 'Caution' : 'On Track'}</span>
+                  <p className="rag-column-helper">{status === 'green' ? 'Monitoring' : 'Immediate follow-up'}</p>
                 </div>
-              ))}
+                <span className="rag-column-count">{filteredProjects.length}</span>
+              </div>
+              <div className="rag-column-body">
+                {filteredProjects.length === 0 && (
+                  <p className="rag-empty">{ragSearchQuery ? 'No matching projects' : 'No projects in this band'}</p>
+                )}
+                {previewProjects.map(project => {
+                    const projectId = project.id || project._id;
+                    const isProjectExpanded = ragExpandedProjectId === projectId;
+                    const allMilestones = project.allMilestoneDetails || [];
+                    const timelineRange = calculateTimelineRange(allMilestones);
+                    const todayPosition = getTodayPosition(timelineRange);
+
+                    return (
+                      <div key={projectId} className="rag-project-card" style={{ position: 'relative' }}>
+                        {/* Compact Project Name Row - Always Visible */}
+                        <div
+                          onClick={() => setRagExpandedProjectId(isProjectExpanded ? null : projectId)}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '10px 12px',
+                            cursor: 'pointer',
+                            borderRadius: '6px',
+                            backgroundColor: isProjectExpanded ? '#f3f4f6' : 'transparent',
+                            transition: 'background-color 0.2s'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                              {isProjectExpanded ? '▼' : '▶'}
+                            </span>
+                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#111827' }}>{project.name}</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {project.overdueMilestones > 0 && (
+                              <span style={{ fontSize: '11px', color: '#ef4444' }}>🔴 {project.overdueMilestones}</span>
+                            )}
+                            {project.upcomingMilestones > 0 && (
+                              <span style={{ fontSize: '11px', color: '#f59e0b' }}>🟡 {project.upcomingMilestones}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expanded Project Details */}
+                        {isProjectExpanded && (
+                          <div style={{ padding: '12px', borderTop: '1px solid #e5e7eb', marginTop: '8px' }}>
+                            <div className="rag-project-meta" style={{ marginBottom: '8px' }}>
+                              <span style={{ fontSize: '12px', color: '#6b7280' }}>{project.clients || 'Client TBD'}</span>
+                              <span style={{ fontSize: '12px', color: '#6b7280', marginLeft: '8px' }}>
+                                RAG: <span style={{ fontWeight: 500, color: getMilestoneColor(project.ragStatus?.toLowerCase() === 'red' ? 'overdue' : project.ragStatus?.toLowerCase() === 'amber' ? 'upcoming' : 'completed') }}>{project.ragStatus || 'Green'}</span>
+                              </span>
+                            </div>
+
+                            {/* Interactive Timeline */}
+                            {allMilestones.length > 0 && timelineRange && (
+                              <div className="rag-timeline-container">
+                                <div className="rag-timeline-labels">
+                                  <span>{timelineRange.start.toLocaleDateString('en-US', { month: 'short' })}</span>
+                                  <span className="rag-timeline-today">Today</span>
+                                  <span>{timelineRange.end.toLocaleDateString('en-US', { month: 'short' })}</span>
+                                </div>
+                                <div className="rag-timeline-track">
+                                  {/* Timeline bar segments */}
+                                  <div className="rag-timeline-past" style={{ width: `${todayPosition}%` }} />
+                                  <div className="rag-timeline-future" style={{ width: `${100 - todayPosition}%` }} />
+
+                                  {/* Today marker */}
+                                  <div
+                                    className="rag-timeline-today-marker"
+                                    style={{ left: `${todayPosition}%` }}
+                                    title="Today"
+                                  />
+
+                                  {/* Milestone dots */}
+                                  {allMilestones.slice(0, 5).map((milestone, idx) => {
+                                    const milestoneStatus = getMilestoneStatus(milestone);
+                                    const position = getMilestonePosition(milestone['Planned End Date'], timelineRange);
+                                    const milestoneName = milestone['Milestone / Task Name'] || milestone['Milestone Name'] || milestone['Milestone'] || milestone['Task Name'] || milestone['Name'] || `M${idx + 1}`;
+                                    const milestoneDate = formatMilestoneDate(milestone['Planned End Date']);
+
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className={`rag-timeline-dot rag-timeline-dot-${milestoneStatus}`}
+                                        style={{ left: `${position}%` }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const isSame = milestoneTooltip && 
+                                            milestoneTooltip.projectId === projectId && 
+                                            milestoneTooltip.milestoneIndex === idx;
+                                          if (isSame) {
+                                            setMilestoneTooltip(null);
+                                          } else {
+                                            setMilestoneTooltip({
+                                              projectId: projectId,
+                                              milestoneIndex: idx,
+                                              name: milestoneName,
+                                              date: milestoneDate,
+                                              status: milestoneStatus,
+                                              milestone: milestone
+                                            });
+                                          }
+                                        }}
+                                        title={`${milestoneName}: ${milestoneDate}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Milestone summary */}
+                                <div className="rag-timeline-summary">
+                                  <span className="rag-summary-item rag-summary-overdue">
+                                    🔴 {project.overdueMilestones || 0} overdue
+                                  </span>
+                                  <span className="rag-summary-item rag-summary-upcoming">
+                                    🟡 {(project.upcomingMilestones || 0)} upcoming
+                                  </span>
+                                  {allMilestones.length > 5 && (
+                                    <span className="rag-summary-item">+{allMilestones.length - 5} more</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Show message if no milestones */}
+                            {allMilestones.length === 0 && (
+                              <div className="rag-timeline-empty">
+                                <span>No milestone data available</span>
+                              </div>
+                            )}
+
+                            {/* Quick stats row */}
+                            <div className="rag-project-quick-stats">
+                              <span className="rag-stat-badge rag-stat-risks">
+                                🔴 {project.openCriticalRisks || 0}
+                              </span>
+                              <span className="rag-stat-badge rag-stat-issues">
+                                ⚠️ {project.openCriticalIssues || 0}
+                              </span>
+                            </div>
+
+                            {/* Milestone Tooltip - Rendered inside card */}
+                            {milestoneTooltip && milestoneTooltip.projectId === projectId && (
+                              <div
+                                className="milestone-tooltip"
+                                style={{
+                                  position: 'absolute',
+                                  left: '50%',
+                                  top: '10px',
+                                  transform: 'translateX(-50%)',
+                                  backgroundColor: 'white',
+                                  border: '1px solid #e5e7eb',
+                                  borderRadius: '8px',
+                                  padding: '16px',
+                                  boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                                  zIndex: 100,
+                                  minWidth: '260px',
+                                  maxWidth: '280px'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {/* Header */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid #f3f4f6' }}>
+                                  <div>
+                                    <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Milestone</div>
+                                    <strong style={{ fontSize: '15px', color: '#111827', display: 'block' }}>
+                                      {milestoneTooltip.milestone?.['Milestone / Task Name'] || milestoneTooltip.milestone?.['Milestone Name'] || milestoneTooltip.milestone?.['Milestone'] || milestoneTooltip.milestone?.['Task Name'] || milestoneTooltip.milestone?.['Name'] || milestoneTooltip.name}
+                                    </strong>
+                                  </div>
+                                  <button
+                                    onClick={() => setMilestoneTooltip(null)}
+                                    style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', color: '#6b7280', padding: 0, marginLeft: '8px' }}
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '8px 12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                                  <span
+                                    style={{
+                                      display: 'inline-block',
+                                      width: '12px',
+                                      height: '12px',
+                                      borderRadius: '50%',
+                                      backgroundColor: getMilestoneColor(milestoneTooltip.status)
+                                    }}
+                                  />
+                                  <span style={{ color: getMilestoneColor(milestoneTooltip.status), fontWeight: 600, fontSize: '13px', textTransform: 'uppercase' }}>
+                                    {milestoneTooltip.status}
+                                  </span>
+                                </div>
+
+                                {/* Details Grid */}
+                                <div style={{ display: 'grid', gap: '10px' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '12px', color: '#6b7280' }}>Planned End:</span>
+                                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>{milestoneTooltip.date}</span>
+                                  </div>
+                                  {milestoneTooltip.milestone?.['Actual End Date'] && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', color: '#6b7280' }}>Actual End:</span>
+                                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>
+                                        {formatMilestoneDate(milestoneTooltip.milestone['Actual End Date'])}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {milestoneTooltip.milestone?.Status && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', color: '#6b7280' }}>Status:</span>
+                                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>{milestoneTooltip.milestone.Status}</span>
+                                    </div>
+                                  )}
+                                  {milestoneTooltip.milestone?.Owner && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', color: '#6b7280' }}>Owner:</span>
+                                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>{milestoneTooltip.milestone.Owner}</span>
+                                    </div>
+                                  )}
+                                  {milestoneTooltip.milestone?.WBS && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', color: '#6b7280' }}>WBS:</span>
+                                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>{milestoneTooltip.milestone.WBS}</span>
+                                    </div>
+                                  )}
+                                  {milestoneTooltip.milestone?.['Milestone Ref'] && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '12px', color: '#6b7280' }}>Ref:</span>
+                                      <span style={{ fontSize: '13px', fontWeight: 500, color: '#111827' }}>{milestoneTooltip.milestone['Milestone Ref']}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {milestoneTooltip.milestone?.Description && (
+                                  <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #f3f4f6' }}>
+                                    <div style={{ fontSize: '11px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>Description</div>
+                                    <div style={{ fontSize: '12px', color: '#374151', lineHeight: '1.5' }}>
+                                      {milestoneTooltip.milestone.Description}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {/* View All Button */}
+                  {hasMoreProjects && (
+                    <button
+                      onClick={() => setRagCategoryModal({ status, projects: filteredProjects, title: status === 'red' ? 'Critical' : status === 'amber' ? 'Caution' : 'On Track' })}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        marginTop: '8px',
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: '#374151',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <span>View All</span>
+                      <span style={{ fontSize: '11px', color: '#9ca3af' }}>({filteredProjects.length})</span>
+                      <span>→</span>
+                    </button>
+                  )}
+                </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </section>
 
       <div className="portfolio-main-grid">
@@ -836,8 +1213,161 @@ function Portfolio() {
         </div>
       )}
 
-        {/* RAG Status Modal */}
-        {showRAGProjectsModal && (
+      {/* RAG Category Modal - View All Projects */}
+      {ragCategoryModal && (
+        <div className="modal-overlay" onClick={() => setRagCategoryModal(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '12px', maxWidth: '900px', width: '90%', maxHeight: '85vh', overflow: 'auto' }}>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', borderBottom: '1px solid #e5e7eb' }}>
+              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>{ragCategoryModal.title} Projects ({ragCategoryModal.projects.length})</h2>
+              <button type="button" onClick={() => setRagCategoryModal(null)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '20px' }}>
+              {ragCategoryModal.projects.length === 0 ? (
+                <p style={{ color: '#6b7280', textAlign: 'center', padding: '40px' }}>No projects in this category</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {ragCategoryModal.projects.map(project => {
+                    const projectId = project.id || project._id;
+                    const isProjectExpanded = ragExpandedProjectId === `modal-${projectId}`;
+                    const allMilestones = project.allMilestoneDetails || [];
+                    const timelineRange = calculateTimelineRange(allMilestones);
+                    const todayPosition = getTodayPosition(timelineRange);
+
+                    return (
+                      <div key={projectId} className="rag-modal-project-card" style={{ border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden' }}>
+                        {/* Compact Project Name Row */}
+                        <div
+                          onClick={() => setRagExpandedProjectId(isProjectExpanded ? null : `modal-${projectId}`)}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '14px 16px',
+                            cursor: 'pointer',
+                            backgroundColor: isProjectExpanded ? '#f9fafb' : 'white',
+                            transition: 'background-color 0.2s'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                              {isProjectExpanded ? '▼' : '▶'}
+                            </span>
+                            <div>
+                              <span style={{ fontSize: '15px', fontWeight: 600, color: '#111827' }}>{project.name}</span>
+                              <span style={{ fontSize: '13px', color: '#6b7280', marginLeft: '12px' }}>{project.clients || 'Client TBD'}</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {project.overdueMilestones > 0 && (
+                              <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 500 }}>🔴 {project.overdueMilestones}</span>
+                            )}
+                            {project.upcomingMilestones > 0 && (
+                              <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 500 }}>🟡 {project.upcomingMilestones}</span>
+                            )}
+                            {project.openCriticalRisks > 0 && (
+                              <span style={{ fontSize: '12px', color: '#ef4444' }}>🔴 {project.openCriticalRisks}</span>
+                            )}
+                            {project.openCriticalIssues > 0 && (
+                              <span style={{ fontSize: '12px', color: '#f59e0b' }}>⚠️ {project.openCriticalIssues}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expanded Project Details */}
+                        {isProjectExpanded && (
+                          <div style={{ padding: '16px', borderTop: '1px solid #e5e7eb', backgroundColor: '#fafafa' }}>
+                            {/* Timeline */}
+                            {allMilestones.length > 0 && timelineRange && (
+                              <div className="rag-timeline-container" style={{ marginBottom: '12px' }}>
+                                <div className="rag-timeline-labels">
+                                  <span>{timelineRange.start.toLocaleDateString('en-US', { month: 'short' })}</span>
+                                  <span className="rag-timeline-today">Today</span>
+                                  <span>{timelineRange.end.toLocaleDateString('en-US', { month: 'short' })}</span>
+                                </div>
+                                <div className="rag-timeline-track">
+                                  <div className="rag-timeline-past" style={{ width: `${todayPosition}%` }} />
+                                  <div className="rag-timeline-future" style={{ width: `${100 - todayPosition}%` }} />
+                                  <div className="rag-timeline-today-marker" style={{ left: `${todayPosition}%` }} title="Today" />
+                                  {allMilestones.slice(0, 5).map((milestone, idx) => {
+                                    const milestoneStatus = getMilestoneStatus(milestone);
+                                    const position = getMilestonePosition(milestone['Planned End Date'], timelineRange);
+                                    const milestoneName = milestone['Milestone / Task Name'] || milestone['Milestone Name'] || milestone['Milestone'] || milestone['Task Name'] || milestone['Name'] || `M${idx + 1}`;
+                                    const milestoneDate = formatMilestoneDate(milestone['Planned End Date']);
+
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className={`rag-timeline-dot rag-timeline-dot-${milestoneStatus}`}
+                                        style={{ left: `${position}%` }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          const isSame = milestoneTooltip && 
+                                            milestoneTooltip.projectId === `modal-${projectId}` && 
+                                            milestoneTooltip.milestoneIndex === idx;
+                                          if (isSame) {
+                                            setMilestoneTooltip(null);
+                                          } else {
+                                            setMilestoneTooltip({
+                                              projectId: `modal-${projectId}`,
+                                              milestoneIndex: idx,
+                                              name: milestoneName,
+                                              date: milestoneDate,
+                                              status: milestoneStatus,
+                                              milestone: milestone
+                                            });
+                                          }
+                                        }}
+                                        title={`${milestoneName}: ${milestoneDate}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                                <div className="rag-timeline-summary">
+                                  <span className="rag-summary-item rag-summary-overdue">🔴 {project.overdueMilestones || 0} overdue</span>
+                                  <span className="rag-summary-item rag-summary-upcoming">🟡 {project.upcomingMilestones || 0} upcoming</span>
+                                  {allMilestones.length > 5 && <span className="rag-summary-item">+{allMilestones.length - 5} more</span>}
+                                </div>
+                              </div>
+                            )}
+                            {allMilestones.length === 0 && (
+                              <div className="rag-timeline-empty"><span>No milestone data available</span></div>
+                            )}
+
+                            {/* Stats Row */}
+                            <div className="rag-project-quick-stats">
+                              <span className="rag-stat-badge rag-stat-risks">🔴 {project.openCriticalRisks || 0} risks</span>
+                              <span className="rag-stat-badge rag-stat-issues">⚠️ {project.openCriticalIssues || 0} issues</span>
+                              <span className="rag-stat-badge" style={{ backgroundColor: '#f3f4f6', color: '#374151' }}>RAG: {project.ragStatus || 'Green'}</span>
+                            </div>
+
+                            {/* Milestone Tooltip */}
+                            {milestoneTooltip && milestoneTooltip.projectId === `modal-${projectId}` && (
+                              <div className="milestone-tooltip" style={{ position: 'relative', marginTop: '12px', backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                  <strong style={{ fontSize: '14px' }}>{milestoneTooltip.milestone?.['Milestone / Task Name'] || milestoneTooltip.name}</strong>
+                                  <button onClick={() => setMilestoneTooltip(null)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer' }}>×</button>
+                                </div>
+                                <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Due: {milestoneTooltip.date}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: getMilestoneColor(milestoneTooltip.status) }} />
+                                  <span style={{ color: getMilestoneColor(milestoneTooltip.status), fontWeight: 500, textTransform: 'capitalize' }}>{milestoneTooltip.status}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RAG Status Modal */}
+      {showRAGProjectsModal && (
           <div className="modal-overlay" onClick={() => setShowRAGProjectsModal(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ backgroundColor: 'white', borderRadius: '8px', maxWidth: '1000px', maxHeight: '80vh', overflow: 'auto', width: '90%' }}>
               <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px', borderBottom: '1px solid #e5e7eb' }}>

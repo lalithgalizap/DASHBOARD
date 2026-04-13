@@ -758,3 +758,243 @@
     min-width: 900px;
   }
 }
+
+/* RAG Project Card Timeline Styles */
+.rag-project-card {
+  background: white;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s ease;
+}
+
+.rag-project-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.rag-project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.rag-project-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #111827;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rag-health-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.rag-health-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.rag-health-amber {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.rag-health-red {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.rag-project-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 12px;
+}
+
+/* Timeline Container */
+.rag-timeline-container {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.rag-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.rag-timeline-today {
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* Timeline Track */
+.rag-timeline-track {
+  position: relative;
+  height: 24px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.rag-timeline-past {
+  background: linear-gradient(to right, #e5e7eb, #f3f4f6);
+  height: 100%;
+}
+
+.rag-timeline-future {
+  background: linear-gradient(to right, #f3f4f6, #e5e7eb);
+  height: 100%;
+}
+
+/* Today Marker */
+.rag-timeline-today-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #6b7280;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.rag-timeline-today-marker::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #6b7280;
+}
+
+/* Milestone Dots */
+.rag-timeline-dot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+  cursor: pointer;
+  z-index: 3;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.rag-timeline-dot:hover {
+  transform: translate(-50%, -50%) scale(1.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.rag-timeline-dot-completed {
+  background-color: #10b981;
+}
+
+.rag-timeline-dot-overdue {
+  background-color: #ef4444;
+}
+
+.rag-timeline-dot-upcoming {
+  background-color: #f59e0b;
+}
+
+.rag-timeline-dot-future {
+  background-color: #9ca3af;
+}
+
+/* Timeline Summary */
+.rag-timeline-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rag-summary-item {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.rag-summary-overdue {
+  color: #dc2626;
+}
+
+.rag-summary-upcoming {
+  color: #d97706;
+}
+
+/* Empty Timeline */
+.rag-timeline-empty {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.rag-timeline-empty span {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Quick Stats Row */
+.rag-project-quick-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rag-stat-badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.rag-stat-risks {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rag-stat-issues {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Milestone Tooltip */
+.milestone-tooltip {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
