@@ -41,7 +41,8 @@ async function setupDatabase() {
     console.log('Creating permissions...');
     const permissions = await Permission.insertMany([
       { permission_name: 'view_dashboard', description: 'Can view dashboard' },
-      { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
+      { permission_name: 'add_delete_projects', description: 'Can add and delete projects' },
+      { permission_name: 'edit_projects', description: 'Can edit projects' },
       { permission_name: 'view_projects', description: 'Can view projects' },
       { permission_name: 'manage_users', description: 'Can create, edit, and delete users' },
       { permission_name: 'view_users', description: 'Can view users' },
@@ -122,14 +123,14 @@ async function setupDatabase() {
     await RolePermission.insertMany(adminRolePermissions);
     console.log('Linked all permissions to Admin');
 
-    // PM: view_dashboard, view_projects, manage_projects, manage_import, manage_closure_docs
-    const pmPerms = getPermIds(['view_dashboard', 'view_projects', 'manage_projects', 'manage_import', 'manage_closure_docs']);
+    // PM: view_dashboard, view_projects, add_delete_projects, edit_projects, manage_import, manage_closure_docs
+    const pmPerms = getPermIds(['view_dashboard', 'view_projects', 'add_delete_projects', 'edit_projects', 'manage_import', 'manage_closure_docs']);
     const pmRolePermissions = pmPerms.map(pid => ({ role_id: pmRole._id, permission_id: pid }));
     await RolePermission.insertMany(pmRolePermissions);
     console.log('Linked permissions to PM');
 
-    // PMO: view_dashboard, view_projects, manage_projects, view_portfolio, manage_import, manage_closure_docs
-    const pmoPerms = getPermIds(['view_dashboard', 'view_projects', 'manage_projects', 'view_portfolio', 'manage_import', 'manage_closure_docs']);
+    // PMO: view_dashboard, view_projects, add_delete_projects, edit_projects, view_portfolio, manage_import, manage_closure_docs
+    const pmoPerms = getPermIds(['view_dashboard', 'view_projects', 'add_delete_projects', 'edit_projects', 'view_portfolio', 'manage_import', 'manage_closure_docs']);
     const pmoRolePermissions = pmoPerms.map(pid => ({ role_id: pmoRole._id, permission_id: pid }));
     await RolePermission.insertMany(pmoRolePermissions);
     console.log('Linked permissions to PMO');
@@ -153,7 +154,7 @@ async function setupDatabase() {
     console.log('Linked permissions to SLTs');
 
     // Superuser: All permissions EXCEPT view_roles and manage_roles
-    const superuserPerms = getPermIds(['view_dashboard', 'manage_projects', 'view_projects', 'manage_import', 'view_portfolio', 'manage_portfolio', 'manage_closure_docs']);
+    const superuserPerms = getPermIds(['view_dashboard', 'add_delete_projects', 'edit_projects', 'view_projects', 'manage_import', 'view_portfolio', 'manage_portfolio', 'manage_closure_docs']);
     const superuserRolePermissions = superuserPerms.map(pid => ({ role_id: superuserRole._id, permission_id: pid }));
     await RolePermission.insertMany(superuserRolePermissions);
     console.log('Linked permissions to Superuser');

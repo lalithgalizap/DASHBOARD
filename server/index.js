@@ -84,7 +84,7 @@ app.get('/api/projects/:id', async (req, res) => {
   }
 });
 
-app.post('/api/projects', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+app.post('/api/projects', authenticate, requirePermission('projects', 'add_delete'), async (req, res) => {
   try {
     const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
     const result = await dbAdapter.createProject({ name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer });
@@ -94,7 +94,7 @@ app.post('/api/projects', authenticate, requirePermission('projects', 'manage'),
   }
 });
 
-app.put('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+app.put('/api/projects/:id', authenticate, requirePermission('projects', 'edit'), async (req, res) => {
   try {
     const { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer } = req.body;
     const result = await dbAdapter.updateProject(req.params.id, { name, priority, stage, summary, status, clients, links, owner, vertical, region, sponsor, anchor_customer });
@@ -104,7 +104,7 @@ app.put('/api/projects/:id', authenticate, requirePermission('projects', 'manage
   }
 });
 
-app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects', 'edit'), async (req, res) => {
   const { id, field } = req.params;
   const { value } = req.body;
   
@@ -139,7 +139,7 @@ app.patch('/api/projects/:id/:field', authenticate, requirePermission('projects'
   }
 });
 
-app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'add_delete'), async (req, res) => {
   try {
     // Get project details before deletion to find the Excel file
     const project = await dbAdapter.getProjectById(req.params.id);
@@ -169,7 +169,7 @@ app.delete('/api/projects/:id', authenticate, requirePermission('projects', 'man
 });
 
 // Upload project document
-app.post('/api/projects/upload-document', authenticate, requirePermission('projects', 'manage'), projectDocUpload.single('file'), async (req, res) => {
+app.post('/api/projects/upload-document', authenticate, requirePermission('projects', 'add_delete'), projectDocUpload.single('file'), async (req, res) => {
   try {
     const { projectId, projectName } = req.body;
     
@@ -233,7 +233,7 @@ app.get('/api/projects/:id/closure-documents', authenticate, async (req, res) =>
 });
 
 // Upload closure documents
-app.post('/api/projects/:id/closure-documents', authenticate, requirePermission('projects', 'manage'), closureDocUpload.array('files'), async (req, res) => {
+app.post('/api/projects/:id/closure-documents', authenticate, requirePermission('projects', 'add_delete'), closureDocUpload.array('files'), async (req, res) => {
   try {
     res.json({ 
       message: 'Files uploaded successfully',
@@ -260,7 +260,7 @@ app.get('/api/projects/:id/closure-documents/download/:filename', authenticate, 
 });
 
 // Delete closure document
-app.delete('/api/projects/:id/closure-documents/:filename', authenticate, requirePermission('projects', 'manage'), async (req, res) => {
+app.delete('/api/projects/:id/closure-documents/:filename', authenticate, requirePermission('projects', 'add_delete'), async (req, res) => {
   try {
     const filePath = path.join(__dirname, '..', 'project-closure-documents', req.params.id, req.params.filename);
     if (!fs.existsSync(filePath)) {

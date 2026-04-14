@@ -89,16 +89,20 @@ function ProjectDetail() {
             </button>
             
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-              {(isAdmin() || hasPermission('projects', 'manage')) && (
+              {(hasPermission('projects', 'add_delete') || hasPermission('projects', 'edit')) && (
                 <>
-                  <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
-                    <Upload size={16} />
-                    Upload Document
-                  </button>
-                  <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
-                    <Edit size={16} />
-                    Edit Project
-                  </button>
+                  {hasPermission('projects', 'add_delete') && (
+                    <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
+                      <Upload size={16} />
+                      Upload Document
+                    </button>
+                  )}
+                  {hasPermission('projects', 'edit') && (
+                    <button className="action-btn edit-btn" onClick={() => setShowProjectModal(true)}>
+                      <Edit size={16} />
+                      Edit Project
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -113,7 +117,7 @@ function ProjectDetail() {
 
           {/* Documents Section */}
           <section className="content-section documents-section">
-            <ProjectDocuments projectId={id} projectName={project?.name} canManage={isAdmin() || hasPermission('projects', 'manage')} />
+            <ProjectDocuments projectId={id} projectName={project?.name} canEdit={hasPermission('projects', 'edit')} />
           </section>
         </main>
       </div>
@@ -124,6 +128,8 @@ function ProjectDetail() {
           onClose={() => setShowProjectModal(false)}
           onSave={handleSaveProject}
           isAdmin={isAdmin() === true}
+          canManageClients={hasPermission('projects', 'edit')}
+          canAddClients={hasPermission('projects', 'add_delete')}
         />
       )}
 

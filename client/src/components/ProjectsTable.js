@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import './ProjectsTable.css';
 
-function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canManage, canImport }) {
+function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit, onDelete, onNewProject, loading, onUpdateField, canAddDelete, canEdit, canImport }) {
   const navigate = useNavigate();
   const statuses = ['Yet to Start', 'On Track', 'On Hold', 'Delayed', 'Completed', 'Cancelled'];
   
@@ -132,7 +132,7 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
           <button 
             className="new-project-btn" 
             onClick={onNewProject}
-            style={{ visibility: canManage ? 'visible' : 'hidden' }}
+            style={{ visibility: canAddDelete ? 'visible' : 'hidden' }}
           >
             <Plus size={16} />
             New Project
@@ -183,7 +183,7 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
                     </div>
                   </td>
                   <td>
-                    {canManage ? (
+                    {canEdit ? (
                       <select
                         value={project.status || 'Active'}
                         onChange={(e) => onUpdateField(project.id, 'status', e.target.value)}
@@ -198,10 +198,10 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
                         ))}
                       </select>
                     ) : (
-                      <span
+                      <span 
                         className="status-badge"
-                        style={{ 
-                          backgroundColor: `${getStatusColor(project.status)}20`, 
+                        style={{
+                          backgroundColor: `${getStatusColor(project.status)}20`,
                           color: getStatusColor(project.status)
                         }}
                       >
@@ -210,16 +210,18 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
                     )}
                   </td>
                   <td>
-                    {canManage && (
-                      <div className="action-buttons">
+                    <div className="action-buttons">
+                      {canEdit && (
                         <button className="action-btn edit-btn" onClick={() => onEdit(project)}>
                           <Edit2 size={14} />
                         </button>
+                      )}
+                      {canAddDelete && (
                         <button className="action-btn delete-btn" onClick={() => onDelete(project.id)}>
                           <Trash2 size={14} />
                         </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

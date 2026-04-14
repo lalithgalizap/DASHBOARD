@@ -83,6 +83,12 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'Admin' || user?.role_name === 'Admin';
   };
 
+  const canAddClients = () => {
+    // Only Admin and Superuser can add new clients
+    return user?.role === 'Admin' || user?.role_name === 'Admin' ||
+           user?.role === 'Superuser' || user?.role_name === 'Superuser';
+  };
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -95,6 +101,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     hasPermission,
     isAdmin,
+    canAddClients,
     checkAuth
   };
 

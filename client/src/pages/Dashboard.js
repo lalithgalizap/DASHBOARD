@@ -7,7 +7,7 @@ import ProjectModal from '../components/ProjectModal';
 import { useAuth } from '../contexts/AuthContext';
 
 function Dashboard() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, canAddClients } = useAuth();
   const [allProjects, setAllProjects] = useState([]);
   const [metrics, setMetrics] = useState({});
   const [filters, setFilters] = useState({
@@ -148,7 +148,8 @@ function Dashboard() {
         }}
         onUpdateField={handleUpdateField}
         loading={loading}
-        canManage={hasPermission('projects', 'manage')}
+        canAddDelete={hasPermission('projects', 'add_delete')}
+        canEdit={hasPermission('projects', 'edit')}
         canImport={hasPermission('import', 'manage')}
       />
 
@@ -167,7 +168,8 @@ function Dashboard() {
             setEditingProject(null);
           }}
           onSave={handleSaveProject}
-          canManageClients={hasPermission('projects', 'manage')}
+          canManageClients={editingProject ? hasPermission('projects', 'edit') : hasPermission('projects', 'add_delete')}
+          canAddClients={canAddClients()}
         />
       )}
     </div>

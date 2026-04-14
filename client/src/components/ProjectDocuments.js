@@ -4,7 +4,7 @@ import { FileText, AlertTriangle, Users, Calendar, TrendingUp, Shield, UserCircl
 import GovernanceCadence from './GovernanceCadence';
 import './ProjectDocuments.css';
 
-function ProjectDocuments({ projectId, projectName, canManage }) {
+function ProjectDocuments({ projectId, projectName, canEdit }) {
   const [activeTab, setActiveTab] = useState('charter');
   const [documents, setDocuments] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -975,7 +975,7 @@ function ProjectDocuments({ projectId, projectName, canManage }) {
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
             <h4>Scope Definition</h4>
             {!isEditingScope ? (
-              canManage && (
+              canEdit && (
                 <button 
                   className="edit-btn"
                   onClick={() => setIsEditingScope(true)}

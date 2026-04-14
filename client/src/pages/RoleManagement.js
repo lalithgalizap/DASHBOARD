@@ -111,7 +111,7 @@ const RoleManagement = () => {
     // Map permissions to pages (frontend-only organization)
     const pageMapping = {
       'Dashboard': ['view_dashboard'],
-      'Projects': ['view_projects', 'manage_projects', 'manage_import', 'manage_closure_docs'],
+      'Projects': ['view_projects', 'add_delete_projects', 'edit_projects', 'manage_import', 'manage_closure_docs'],
       'Portfolio': ['view_portfolio', 'manage_portfolio'],
       'User Management': ['view_users', 'manage_users'],
       'Role Management': ['view_roles', 'manage_roles']

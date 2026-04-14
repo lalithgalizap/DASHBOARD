@@ -27,7 +27,8 @@ async function setupAuth() {
     console.log('Creating permissions...');
     const permissions = await Permission.insertMany([
       { permission_name: 'view_dashboard', description: 'Can view dashboard' },
-      { permission_name: 'manage_projects', description: 'Can create, edit, and delete projects' },
+      { permission_name: 'add_delete_projects', description: 'Can add and delete projects' },
+      { permission_name: 'edit_projects', description: 'Can edit projects' },
       { permission_name: 'view_projects', description: 'Can view projects' },
       { permission_name: 'view_updates', description: 'Can view weekly updates' },
       { permission_name: 'manage_updates', description: 'Can create and edit weekly updates' },
@@ -72,7 +73,7 @@ async function setupAuth() {
     // Link PM permissions
     console.log('Linking permissions to Project Manager role...');
     const pmPermissions = permissions.filter(p => 
-      ['view_dashboard', 'manage_projects', 'view_projects', 'view_updates', 'manage_updates'].includes(p.permission_name)
+      ['view_dashboard', 'add_delete_projects', 'edit_projects', 'view_projects', 'view_updates', 'manage_updates'].includes(p.permission_name)
     );
     const pmRolePermissions = pmPermissions.map(p => ({
       role_id: pmRole._id,

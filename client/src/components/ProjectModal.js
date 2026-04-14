@@ -3,7 +3,7 @@ import { X, ChevronDown, Search, Plus, X as XIcon } from 'lucide-react';
 import axios from 'axios';
 import './ProjectModal.css';
 
-function ProjectModal({ project, onClose, onSave, isAdmin, canManageClients }) {
+function ProjectModal({ project, onClose, onSave, isAdmin, canManageClients, canAddClients }) {
   console.log('ProjectModal - isAdmin prop:', isAdmin, 'type:', typeof isAdmin);
   console.log('ProjectModal - canManageClients prop:', canManageClients);
   
@@ -143,7 +143,7 @@ function ProjectModal({ project, onClose, onSave, isAdmin, canManageClients }) {
 
           <div className="form-group">
             <label>Clients</label>
-            {(isAdmin === true || canManageClients) ? (
+            {canAddClients ? (
               <div className="client-select-container">
                 <div className="selected-clients">
                   {formData.clients.map(client => (
@@ -194,7 +194,7 @@ function ProjectModal({ project, onClose, onSave, isAdmin, canManageClients }) {
                           No existing clients found
                         </div>
                       )}
-                      {(clientSearch.trim() || newClientInput.trim()) && !formData.clients.includes(clientSearch.trim() || newClientInput.trim()) && (
+                      {canAddClients && (clientSearch.trim() || newClientInput.trim()) && !formData.clients.includes(clientSearch.trim() || newClientInput.trim()) && (
                         <div
                           className="client-option add-new"
                           onClick={() => {
