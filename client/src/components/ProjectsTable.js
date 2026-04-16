@@ -109,6 +109,21 @@ function ProjectsTable({ projects, allProjects, filters, onFilterChange, onEdit,
         </div>
         
         <div className="filter-dropdowns">
+          <input
+            type="text"
+            placeholder="Search projects or clients..."
+            value={filters.search || ''}
+            onChange={(e) => onFilterChange({...filters, search: e.target.value})}
+            className="search-input"
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '14px',
+              minWidth: '200px',
+              flex: '1'
+            }}
+          />
           <select 
             value={filters.status} 
             onChange={(e) => onFilterChange({...filters, status: e.target.value})}

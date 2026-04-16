@@ -12,7 +12,8 @@ function Dashboard() {
   const [metrics, setMetrics] = useState({});
   const [filters, setFilters] = useState({
     status: 'All',
-    client: 'All'
+    client: 'All',
+    search: ''
   });
   const [showImportModal, setShowImportModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
@@ -51,6 +52,17 @@ function Dashboard() {
       if (!project.clients) return false;
       const projectClients = project.clients.split(',').map(c => c.trim().toLowerCase());
       if (!projectClients.includes(filters.client.toLowerCase())) {
+        return false;
+      }
+    }
+    
+    // Search filter (project name and client name)
+    if (filters.search && filters.search.trim()) {
+      const searchTerm = filters.search.toLowerCase().trim();
+      const projectName = (project.name || '').toLowerCase();
+      const projectClients = (project.clients || '').toLowerCase();
+      
+      if (!projectName.includes(searchTerm) && !projectClients.includes(searchTerm)) {
         return false;
       }
     }
